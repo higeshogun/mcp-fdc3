@@ -14,7 +14,15 @@ If you are working on other applications which rely on other versions of Node.js
 
 ### Client Library
 
-TODO
+Run the following commands:
+
+```
+cd packages/client
+npm i
+npm run build
+```
+
+The built `client` library should now be available in the `dist` folder.
 
 ### Server Library
 
