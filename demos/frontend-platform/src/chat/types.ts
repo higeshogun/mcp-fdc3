@@ -1,3 +1,5 @@
+//TODO - Consider moving/consolidating some of these types to a new 'shared' library to avoid duplication
+
 type URI = 'fdc3://api-method-request';
 
 type MimeType = 'application/vnd.mcp-fdc3.fdc3-api-method-request';

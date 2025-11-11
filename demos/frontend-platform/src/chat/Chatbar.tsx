@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { isMcpFdc3Resource, handleMcpFdc3Resource } from '../../../../packages/client/dist/mcp-fdc3-client.esm.js';
-// import { isMcpFdc3Resource, handleMcpFdc3Resource } from '@mcp-fdc3/client/dist/mcp-fdc3-client.esm.js';
+// import { isMcpFdc3Resource, handleMcpFdc3Resource } from '../../../../packages/client/dist/mcp-fdc3-client.esm.js';
+import { isMcpFdc3Resource, handleMcpFdc3Resource } from '@mcp-fdc3/client/dist/mcp-fdc3-client.esm.js';
 import type { Interaction } from './types';
 import { getStructuredMessage } from './getStructuredMessage';
 import { PoorMansFdc3Agent } from '../fdc3-agent/PoorMansFdc3Agent.js';

@@ -16,6 +16,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@finos/fdc3": "^2.2.0",
+    "@mcp-fdc3/client": "*",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },

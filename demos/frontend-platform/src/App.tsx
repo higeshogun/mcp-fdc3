@@ -8,6 +8,7 @@ function App() {
         <Chatbar />
       </div>
       <div style={{ flex: '1 1 55%', minWidth: 0 }}>
+        {/* iframe placeholder - replace with url for demos/frontend-app-blotter when it is built */}
         <iframe
           src="https://en.wikipedia.org"
           style={{
