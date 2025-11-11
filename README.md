@@ -61,7 +61,13 @@ npm run dev
 
 ### Frontend Platform
 
-TODO
+Run the following commands:
+
+```
+cd demos/frontend-platform
+npm i
+npm run dev
+```
 
 ### Frontend Blotter App
 
