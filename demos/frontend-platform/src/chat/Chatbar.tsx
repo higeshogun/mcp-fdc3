@@ -10,6 +10,9 @@ const AI_AGENT_ENDPOINT = import.meta.env.VITE_AI_AGENT_ENDPOINT;
 //TODO - Either stub out PoorMansFdc3Agent further. Or perhaps replace with reference implementation of an FDC3 Desktop Agent from finos/FDC3 repo.
 const fdc3Agent = new PoorMansFdc3Agent();
 
+//TODO - Clean up this component. On a basic level, it works well enough to demonstrate the concept of MCP-FDC3.
+//But it is extremely messy and verbose as it was AI-generated, but without specifying good standards and constraints for the output.
+//Same again for the getStructuredMessage() function.
 export const Chatbar: React.FC = () => {
   const [question, setQuestion] = useState('');
   const [interactions, setInteractions] = useState<Interaction[]>([]);
