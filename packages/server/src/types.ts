@@ -1,49 +1,48 @@
 import type { EmbeddedResource, Resource } from '@modelcontextprotocol/sdk/types.js';
 
-export type URI = 'fdc3://api-method-request';
+export type Fdc3Resource = {
+  type: 'resource';
+  resource: Fdc3MessageTextContent | Base64BlobContent;
+  annotations?: Record<string, unknown>;
+  _meta?: Record<string, unknown>;
+};
 
-export type MimeType = 'application/vnd.mcp-fdc3.fdc3-api-method-request';
+export const Fdc3ApiUri = 'fdc3://api-method-request';
+
+export const Fdc3ApiMimeType = 'application/vnd.mcp-fdc3.fdc3-api-method-request';
+
+export const Fdc3ApiMethodRequestPayloadType = 'fdc3ApiMethodRequest';
 
 export type Fdc3MessageTextContent = {
-  uri: URI;
-  mimeType: MimeType;
+  uri: typeof Fdc3ApiUri;
+  mimeType: typeof Fdc3ApiMimeType;
   text: string; // FDC3 message JSON content
   blob?: never;
   _meta?: Record<string, unknown>;
 };
 
 export type Base64BlobContent = {
-  uri: URI;
-  mimeType: MimeType;
+  uri: typeof Fdc3ApiUri;
+  mimeType: typeof Fdc3ApiMimeType;
   blob: string; //  Base64 encoded FDC3 message JSON content
   text?: never;
   _meta?: Record<string, unknown>;
 };
 
 export type Fdc3ResourceContentPayload = {
-  type: 'fdc3ApiMethodRequest';
+  type: typeof Fdc3ApiMethodRequestPayloadType;
   fdc3MessageJson: string
 }
 
 export interface CreateFdc3ResourceOptions {
-  uri: URI;
+  uri: typeof Fdc3ApiUri;
   content: Fdc3ResourceContentPayload;
   encoding: 'text' | 'blob';
-  uiMetadata?: UIResourceMetadata;
   metadata?: Record<string, unknown>;
   resourceProps?: Fdc3ResourceProps;
   embeddedResourceProps?: EmbeddedFdc3ResourceProps;
 }
 
 export type Fdc3ResourceProps = Omit<Partial<Resource>, 'uri' | 'mimeType'>;
+
 export type EmbeddedFdc3ResourceProps = Omit<Partial<EmbeddedResource>, 'resource' | 'type'>;
-
-export const UIMetadataKey = {
-  PREFERRED_FRAME_SIZE: 'preferred-frame-size',
-  INITIAL_RENDER_DATA: 'initial-render-data',
-} as const;
-
-export type UIResourceMetadata = {
-  [UIMetadataKey.PREFERRED_FRAME_SIZE]?: [string, string];
-  [UIMetadataKey.INITIAL_RENDER_DATA]?: Record<string, unknown>;
-};
