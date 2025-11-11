@@ -55,7 +55,7 @@ app.post('/mcp', async (req, res) => {
     // Create a new server instance for this specific session.
     const server = new McpServer({
       name: 'backend-mcp-server-ts',
-      version: '0.1.0'
+      version: '0.1.0',
     });
 
     server.registerTool('getTrades', {

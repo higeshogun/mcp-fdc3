@@ -107,16 +107,16 @@ app.use(cors({
   allowedHeaders: ['content-type', 'x-client', 'authorization'],
 }));
 
-// Handle GET requests (for basic testing purposes only)
-app.get('/api/chat', async (req: Request, res: Response) => {
-  console.log('\n\nReceived GET /api/chat');
-  // const userPrompt = 'What is the capital of France?';
-  const userPrompt = 'Get trades for apple';
-  const response = await getResponse(userPrompt);
-  return res.status(200).json({
-    response
-  });
-});
+// // Handle GET requests (for basic testing purposes only)
+// app.get('/api/chat', async (req: Request, res: Response) => {
+//   console.log('\n\nReceived GET /api/chat');
+//   // const userPrompt = 'What is the capital of France?';
+//   const userPrompt = 'Get trades for apple';
+//   const response = await getResponse(userPrompt);
+//   return res.status(200).json({
+//     response
+//   });
+// });
 
 // Handle POST requests for frontend-to-agent communication e.g. from frontend-platform
 app.post('/api/chat', async (req: Request, res: Response) => {

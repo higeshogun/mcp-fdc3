@@ -7,7 +7,7 @@ export const getTrades = async ({ companyName }: { companyName: string }): Promi
   // Create the FDC3 resource to be returned to the client (this is the only part specific to MCP-FDC3)
   const sanitizedCompanyName = companyName.replace(/[^a-zA-Z0-9-]/g, '').toLowerCase();
   const company = tickerMappingData.find((c: any) => c.name.toLowerCase().includes(sanitizedCompanyName));
-  console.log(`companyName: ${companyName}; sanitizedCompanyName: %{sanitizedCompanyName}; company.name: ${company?.name}; company.ticker: ${company?.ticker}`);
+  console.log(`companyName: ${companyName}; sanitizedCompanyName: ${sanitizedCompanyName}; company.name: ${company?.name}; company.ticker: ${company?.ticker}`);
   if (company) {
     const targetApp: AppIdentifier = {
       appId: 'frontend-app-blotter',
