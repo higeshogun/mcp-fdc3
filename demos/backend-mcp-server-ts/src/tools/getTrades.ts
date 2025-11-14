@@ -11,15 +11,16 @@ export const getTrades = async ({ companyName }: { companyName: string }): Promi
   const company = tickerMappingData.find((c: any) => c.name.toLowerCase().includes(sanitizedCompanyName));
   console.log(`companyName: ${companyName}; sanitizedCompanyName: ${sanitizedCompanyName}; company.name: ${company?.name}; company.ticker: ${company?.ticker}`);
   if (company) {
+
     const targetApp: AppIdentifier = {
       appId: 'frontend-app-blotter',
     };
     const context: Context = {
       type: 'fdc3.instrument',
-      name: company?.name,
+      name: company.name,
       id: {
-        ticker: company?.ticker,
-      }
+        ticker: company.ticker,
+      },
     };
     const fdc3Resource = createFdc3RaiseIntentResource('ViewInstrument', context, targetApp);
 
@@ -27,11 +28,12 @@ export const getTrades = async ({ companyName }: { companyName: string }): Promi
       content: [
         {
           type: 'text',
-          text: `Trades retrieved for ${companyName}`,
+          text: `Trades retrieved for ${company.name}`,
         },
         fdc3Resource,
       ],
     };
+
   } else {
     return {
       content: [

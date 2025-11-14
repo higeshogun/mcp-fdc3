@@ -7,7 +7,8 @@ import { PoorMansFdc3Agent } from '../fdc3-agent/PoorMansFdc3Agent.js';
 
 const AI_AGENT_ENDPOINT = import.meta.env.VITE_AI_AGENT_ENDPOINT;
 
-//TODO - Either stub out PoorMansFdc3Agent further. Or perhaps replace with reference implementation of an FDC3 Desktop Agent from finos/FDC3 repo.
+//TODO - Either stub out PoorMansFdc3Agent further.
+//Or perhaps replace with the finos/FDC3 FDC3 Desktop Agent reference implementation.
 const fdc3Agent = new PoorMansFdc3Agent();
 
 //TODO - Clean up this component. On a basic level, it works well enough to demonstrate the concept of MCP-FDC3.
@@ -66,9 +67,11 @@ export const Chatbar: React.FC = () => {
         console.log('Processing of response from AI Agent is shown below');
         console.log('structuredMessage.mcpResource:');
         console.log(structuredMessage.mcpResource);
+
         if (isMcpFdc3Resource(structuredMessage.mcpResource)) {
           handleMcpFdc3Resource(fdc3Agent, structuredMessage.mcpResource);
         }
+
       }
     } catch (e: any) {
       setInteractions(prev => prev.map((it, i) => i === interactionIndex ? { ...it, isError: true, response: `Error (${e.message})`, finalAnswer: 'Error processing response to question' } : it));
