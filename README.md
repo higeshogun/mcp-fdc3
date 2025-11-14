@@ -11,7 +11,7 @@ MCP-FDC3 provides two libraries:
 - **`server`** - utilities to generate FDC3 resources (e.g. `Fdc3Resource`) in an MCP server.
 - **`client`** - functions (e.g. `handleMcpFdc3Resource`) to process the FDC3 resources and handle the automatic invocation of appropriate FDC3 API methods.
 
-This repo also contains 3 associated projects that can be used to test and demonstrate the `server` and `client` libraries:
+This repo also contains three associated projects that can be used to test and demonstrate the `server` and `client` libraries:
 
 - **`backend-mcp-server-ts`** - a basic MCP Server built using [express](https://www.npmjs.com/package/express), [@modelcontextprotocol/sdk](https://www.npmjs.com/package/@modelcontextprotocol/sdk), and the MCP-FDC3 `server` library.
 - **`backend-ai-agent-ts`** - a basic AI Agent built using [express](https://www.npmjs.com/package/express), [langchain](https://www.npmjs.com/package/langchain) and [@modelcontextprotocol/sdk](https://www.npmjs.com/package/@modelcontextprotocol/sdk). Uses an [OpenAI](https://openai.com/) model together with the tools from the `backend-mcp-server-ts` service.
@@ -76,7 +76,7 @@ The `backend-mcp-server-ts` MCP endpoint should now be available on http://local
 First configure the environment:
 
 - Copy the provided `/demos/backend-ai-agent-ts/example.env` file to `/demos/backend-ai-agent-ts/.env`.
-- In the new `.env` file set the OPENAI_API_KEY to your OpenAI API key
+- In the new `.env` file set the `OPENAI_API_KEY` to your OpenAI API key
 
 Then run the following commands:
 
@@ -114,7 +114,7 @@ Now you've got this far, you can test out MCP / FDC3 integration further using t
 
 - Create and register additional tools within `backend-mcp-server-ts` e.g. using the MCP-FDC3 Resource Creators.
 - Change the `fdc3Agent` reference in `Chatbar.tsx` within `frontend-platform` to something more useful e.g. the finos/FDC3 FDC3 DA reference implementation, or your own FDC3 DA.
-- Change the `iframe` in `App.tsx` within `frontend-platform` to load one of your FDC3-enabled apps, and perhaps a second app in an additional `iframe`.
+- Change the `iframe` in `App.tsx` within `frontend-platform` to load one of your FDC3-enabled apps, and perhaps a second FDC3-enabled app in an additional `iframe`.
 
 ### Frontend Blotter App
 
