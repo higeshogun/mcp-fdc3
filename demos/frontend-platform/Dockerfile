@@ -6,14 +6,14 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Copy workspace manifests for dependency resolution
-COPY package.json package-lock.json ./
+COPY package*.json ./
 COPY packages/client/package.json ./packages/client/
 COPY packages/server/package.json ./packages/server/
 COPY demos/backend-ai-agent-ts/package.json ./demos/backend-ai-agent-ts/
 COPY demos/backend-mcp-server-ts/package.json ./demos/backend-mcp-server-ts/
 COPY demos/frontend-platform/package.json ./demos/frontend-platform/
 
-RUN npm ci
+RUN npm install
 
 # Copy source for workspace libraries and the frontend
 COPY packages/client ./packages/client

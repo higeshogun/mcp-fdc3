@@ -1,9 +1,11 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
+import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { ChatOpenAI } from '@langchain/openai';
+import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
+import { ChatOllama } from '@langchain/ollama';
 import { loadMcpTools } from '@langchain/mcp-adapters';
-import { HumanMessage, ReactAgent, ResponseFormatUndefined, createAgent } from 'langchain';
-import { AgentMiddleware, AnyAnnotationRoot } from 'langchain/dist/agents/middleware/types';
+import { HumanMessage, createAgent } from 'langchain';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 
@@ -15,8 +17,8 @@ function requireEnv(name: string): string {
   return value;
 }
 
-const OPENAI_API_KEY = requireEnv('OPENAI_API_KEY');
-const OPENAI_MODEL = requireEnv('OPENAI_MODEL');
+// Supported providers: openai | gemini | ollama
+const AI_PROVIDER = (process.env.AI_PROVIDER ?? 'openai').toLowerCase();
 
 const AI_AGENT_NAME = 'backend-ai-agent-ts';
 const AI_AGENT_VERSION = '0.1.0';
@@ -39,15 +41,50 @@ Replace <COMPANY_NAME> with the actual company name exactly as provided (case pr
 `;
 
 
-const getModel = async (): Promise<ChatOpenAI> => {
-  console.log('getModel - started creating ChatOpenAI model...');
-  const model = new ChatOpenAI({
-    model: OPENAI_MODEL,
-    openAIApiKey: OPENAI_API_KEY,
-    temperature: 0,
-    maxTokens: 512,
-  });
-  console.log('getModel - completed creating ChatOpenAI model');
+const getModel = async (): Promise<BaseChatModel> => {
+  console.log(`getModel - creating model for provider: '${AI_PROVIDER}'...`);
+
+  let model: BaseChatModel;
+
+  switch (AI_PROVIDER) {
+    case 'gemini': {
+      const apiKey = requireEnv('GEMINI_API_KEY');
+      const modelName = requireEnv('GEMINI_MODEL');
+      model = new ChatGoogleGenerativeAI({
+        model: modelName,
+        apiKey,
+        temperature: 0,
+        maxOutputTokens: 512,
+      });
+      break;
+    }
+
+    case 'ollama': {
+      const modelName = requireEnv('OLLAMA_MODEL');
+      const baseUrl = process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434';
+      model = new ChatOllama({
+        model: modelName,
+        baseUrl,
+        temperature: 0,
+      });
+      break;
+    }
+
+    case 'openai':
+    default: {
+      const apiKey = requireEnv('OPENAI_API_KEY');
+      const modelName = requireEnv('OPENAI_MODEL');
+      model = new ChatOpenAI({
+        model: modelName,
+        openAIApiKey: apiKey,
+        temperature: 0,
+        maxTokens: 512,
+      });
+      break;
+    }
+  }
+
+  console.log(`getModel - model ready (provider: ${AI_PROVIDER})`);
   return model;
 };
 
@@ -63,7 +100,7 @@ const initHttpClient = async (): Promise<Client> => {
   return client;
 };
 
-const getAgent = async (model: ChatOpenAI): Promise<ReactAgent<ResponseFormatUndefined, undefined, AnyAnnotationRoot, readonly AgentMiddleware<any, any, any>[]>> => {
+const getAgent = async (model: BaseChatModel): Promise<any> => {
   console.log('getAgent - started creating agent...');
   const httpClient = await initHttpClient();
   const tools = await loadMcpTools(BACKEND_MCP_SERVER_NAME, httpClient);
@@ -78,11 +115,6 @@ const getAgent = async (model: ChatOpenAI): Promise<ReactAgent<ResponseFormatUnd
 
 const getResponse = async (userPrompt: string): Promise<any> => {
   console.log(`getResponse - started getting response for prompt: '${userPrompt}' ...`);
-
-  // const response = await model.invoke([{
-  //   role: 'user',
-  //   content: userPrompt
-  // }]);
 
   const response = await agent.invoke({
     messages: [new HumanMessage(userPrompt)],
@@ -107,16 +139,8 @@ app.use(cors({
   allowedHeaders: ['content-type', 'x-client', 'authorization'],
 }));
 
-// // Handle GET requests (for basic testing purposes only)
-// app.get('/api/chat', async (req: Request, res: Response) => {
-//   console.log('\n\nReceived GET /api/chat');
-//   // const userPrompt = 'What is the capital of France?';
-//   const userPrompt = 'Get trades for apple';
-//   const response = await getResponse(userPrompt);
-//   return res.status(200).json({
-//     response
-//   });
-// });
+// Health check for Cloud Run readiness probes.
+app.get('/health', (_req, res) => res.status(200).json({ status: 'ok' }));
 
 // Handle POST requests for frontend-to-agent communication e.g. from frontend-platform
 app.post('/api/chat', async (req: Request, res: Response) => {
