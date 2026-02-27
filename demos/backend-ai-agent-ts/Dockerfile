@@ -25,4 +25,4 @@ RUN npm run build --workspace=packages/server
 ENV NODE_ENV=production
 EXPOSE 4000
 
-CMD ["./node_modules/.bin/vite-node", "demos/backend-ai-agent-ts/src/index.ts"]
+CMD ["./node_modules/.bin/tsx", "demos/backend-ai-agent-ts/src/index.ts"]

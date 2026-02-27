@@ -89,6 +89,9 @@ const handleSessionRequest = async (req: express.Request, res: express.Response)
   await transport.handleRequest(req, res);
 };
 
+// Health check for Cloud Run readiness probes.
+app.get('/health', (_req, res) => res.status(200).json({ status: 'ok' }));
+
 // GET handles the long-lived stream for server-to-client messages.
 app.get('/mcp', handleSessionRequest);
 

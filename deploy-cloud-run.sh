@@ -6,14 +6,25 @@
 # Prerequisites:
 #   - gcloud CLI installed and authenticated: gcloud auth login
 #   - Docker installed and running
-#   - OPENAI_API_KEY environment variable set
 #
 # Usage:
 #   PROJECT_ID=my-gcp-project OPENAI_API_KEY=sk-... ./deploy-cloud-run.sh
 #
 # Optional env vars (with defaults):
-#   REGION        GCP region           (default: us-central1)
-#   OPENAI_MODEL  OpenAI model name    (default: gpt-4.1-mini)
+#   REGION        GCP region                      (default: us-central1)
+#   AI_PROVIDER   openai | gemini | ollama         (default: openai)
+#
+#   OpenAI  (AI_PROVIDER=openai):
+#     OPENAI_API_KEY   required
+#     OPENAI_MODEL     (default: gpt-4.1-mini)
+#
+#   Gemini  (AI_PROVIDER=gemini):
+#     GEMINI_API_KEY   required
+#     GEMINI_MODEL     (default: gemini-2.0-flash)
+#
+#   Ollama  (AI_PROVIDER=ollama):
+#     OLLAMA_MODEL     required
+#     OLLAMA_BASE_URL  (default: http://localhost:11434)
 #
 # Approximate cost for this demo stack: ~$1-3/month
 # The MCP server runs with min-instances=1 to keep sessions alive.
@@ -24,7 +35,7 @@ set -euo pipefail
 # ---------- Config ------------------------------------------------------------
 PROJECT_ID="${PROJECT_ID:-}"
 REGION="${REGION:-us-central1}"
-OPENAI_MODEL="${OPENAI_MODEL:-gpt-4.1-mini}"
+AI_PROVIDER="${AI_PROVIDER:-openai}"
 REPO_NAME="mcp-fdc3"
 
 # ---------- Validation --------------------------------------------------------
@@ -34,10 +45,36 @@ if [ -z "$PROJECT_ID" ]; then
   exit 1
 fi
 
-if [ -z "${OPENAI_API_KEY:-}" ]; then
-  echo "ERROR: OPENAI_API_KEY is required."
-  exit 1
-fi
+case "$AI_PROVIDER" in
+  openai)
+    if [ -z "${OPENAI_API_KEY:-}" ]; then
+      echo "ERROR: OPENAI_API_KEY is required when AI_PROVIDER=openai."
+      exit 1
+    fi
+    OPENAI_MODEL="${OPENAI_MODEL:-gpt-4.1-mini}"
+    AI_AGENT_ENV_VARS="AI_PROVIDER=openai,OPENAI_API_KEY=${OPENAI_API_KEY},OPENAI_MODEL=${OPENAI_MODEL}"
+    ;;
+  gemini)
+    if [ -z "${GEMINI_API_KEY:-}" ]; then
+      echo "ERROR: GEMINI_API_KEY is required when AI_PROVIDER=gemini."
+      exit 1
+    fi
+    GEMINI_MODEL="${GEMINI_MODEL:-gemini-2.0-flash}"
+    AI_AGENT_ENV_VARS="AI_PROVIDER=gemini,GEMINI_API_KEY=${GEMINI_API_KEY},GEMINI_MODEL=${GEMINI_MODEL}"
+    ;;
+  ollama)
+    if [ -z "${OLLAMA_MODEL:-}" ]; then
+      echo "ERROR: OLLAMA_MODEL is required when AI_PROVIDER=ollama."
+      exit 1
+    fi
+    OLLAMA_BASE_URL="${OLLAMA_BASE_URL:-http://localhost:11434}"
+    AI_AGENT_ENV_VARS="AI_PROVIDER=ollama,OLLAMA_MODEL=${OLLAMA_MODEL},OLLAMA_BASE_URL=${OLLAMA_BASE_URL}"
+    ;;
+  *)
+    echo "ERROR: Unknown AI_PROVIDER '${AI_PROVIDER}'. Must be one of: openai, gemini, ollama"
+    exit 1
+    ;;
+esac
 
 if ! command -v gcloud &>/dev/null; then
   echo "ERROR: gcloud CLI not found. Install it from https://cloud.google.com/sdk/docs/install"
@@ -54,9 +91,10 @@ REGISTRY="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}"
 echo "=============================================="
 echo " MCP-FDC3 — Google Cloud Run Deployment"
 echo "=============================================="
-echo " Project : $PROJECT_ID"
-echo " Region  : $REGION"
-echo " Registry: $REGISTRY"
+echo " Project  : $PROJECT_ID"
+echo " Region   : $REGION"
+echo " Registry : $REGISTRY"
+echo " Provider : $AI_PROVIDER"
 echo "=============================================="
 echo ""
 
@@ -98,6 +136,7 @@ gcloud run deploy mcp-fdc3-mcp-server \
   --memory=512Mi \
   --cpu=1 \
   --timeout=60 \
+  --startup-cpu-boost \
   --quiet
 
 MCP_SERVER_URL=$(gcloud run services describe mcp-fdc3-mcp-server \
@@ -126,7 +165,8 @@ gcloud run deploy mcp-fdc3-ai-agent \
   --memory=1Gi \
   --cpu=1 \
   --timeout=300 \
-  --set-env-vars="OPENAI_API_KEY=${OPENAI_API_KEY},OPENAI_MODEL=${OPENAI_MODEL},BACKEND_MCP_SERVER_URL=${MCP_SERVER_URL}/mcp,FRONTEND_PLATFORM_ORIGIN=*" \
+  --startup-cpu-boost \
+  --set-env-vars="${AI_AGENT_ENV_VARS},BACKEND_MCP_SERVER_URL=${MCP_SERVER_URL}/mcp,FRONTEND_PLATFORM_ORIGIN=*" \
   --quiet
 
 AI_AGENT_URL=$(gcloud run services describe mcp-fdc3-ai-agent \

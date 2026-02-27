@@ -139,6 +139,9 @@ app.use(cors({
   allowedHeaders: ['content-type', 'x-client', 'authorization'],
 }));
 
+// Health check for Cloud Run readiness probes.
+app.get('/health', (_req, res) => res.status(200).json({ status: 'ok' }));
+
 // Handle POST requests for frontend-to-agent communication e.g. from frontend-platform
 app.post('/api/chat', async (req: Request, res: Response) => {
   console.log(`\n\nReceived POST /api/chat (question: '${req.body?.question}')`);
