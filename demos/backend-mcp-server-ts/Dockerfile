@@ -5,7 +5,7 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Copy workspace manifests so npm can resolve the workspace graph
-COPY package.json package-lock.json ./
+COPY package*.json ./
 COPY packages/client/package.json ./packages/client/
 COPY packages/server/package.json ./packages/server/
 COPY demos/backend-ai-agent-ts/package.json ./demos/backend-ai-agent-ts/
@@ -13,7 +13,7 @@ COPY demos/backend-mcp-server-ts/package.json ./demos/backend-mcp-server-ts/
 COPY demos/frontend-platform/package.json ./demos/frontend-platform/
 
 # Install all dependencies (devDeps included for vite-node)
-RUN npm ci
+RUN npm install
 
 # Copy source for the workspace library this service depends on, and the service itself
 COPY packages/server ./packages/server
