@@ -21,8 +21,8 @@ const OPENAI_MODEL = requireEnv('OPENAI_MODEL');
 const AI_AGENT_NAME = 'backend-ai-agent-ts';
 const AI_AGENT_VERSION = '0.1.0';
 const BACKEND_MCP_SERVER_NAME = 'backend-mcp-server-ts';
-const BACKEND_MCP_SERVER_URL = 'http://localhost:3000/mcp';
-const FRONTEND_PLATFORM_ORIGIN = 'http://localhost:8080';
+const BACKEND_MCP_SERVER_URL = process.env.BACKEND_MCP_SERVER_URL ?? 'http://localhost:3000/mcp';
+const FRONTEND_PLATFORM_ORIGIN = process.env.FRONTEND_PLATFORM_ORIGIN ?? 'http://localhost:8080';
 
 const SYSTEM_PROMPT = `Only respond via tools; if not tool applies output: NO_APPLICABLE_TOOL.
 Never return JSON or external urls or links from the model in your response.
@@ -97,12 +97,12 @@ console.log(`\nStarting AI agent service (${AI_AGENT_NAME})\n`);
 const model = await getModel();
 const agent = await getAgent(model);
 const app = express();
-const port = 4000;
+const port = Number(process.env.PORT) || 4000;
 
 app.use(express.json());
 
 app.use(cors({
-  origin: FRONTEND_PLATFORM_ORIGIN,
+  origin: FRONTEND_PLATFORM_ORIGIN === '*' ? true : FRONTEND_PLATFORM_ORIGIN,
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['content-type', 'x-client', 'authorization'],
 }));
