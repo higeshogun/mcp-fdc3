@@ -136,7 +136,7 @@ gcloud run deploy mcp-fdc3-mcp-server \
   --memory=512Mi \
   --cpu=1 \
   --timeout=60 \
-  --startup-cpu-boost \
+  --cpu-boost \
   --quiet
 
 MCP_SERVER_URL=$(gcloud run services describe mcp-fdc3-mcp-server \
