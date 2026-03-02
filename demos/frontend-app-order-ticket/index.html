@@ -29,8 +29,8 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 20px;
-            height: 52px;
+            padding: 0 16px;
+            height: 44px;
             background: #161b22;
             border-bottom: 1px solid #30363d;
             flex-shrink: 0;
@@ -39,40 +39,30 @@
         .header-left {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
 
         .app-badge {
             display: flex;
             align-items: center;
-            gap: 7px;
+            gap: 6px;
             background: rgba(210, 153, 34, 0.12);
             border: 1px solid rgba(210, 153, 34, 0.3);
-            border-radius: 6px;
-            padding: 4px 10px;
-            font-size: 13px;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 12px;
             font-weight: 600;
             color: #d29922;
-        }
-
-        .fdc3-tag {
-            font-size: 11px;
-            font-weight: 600;
-            color: #7d8590;
-            background: #21262d;
-            border: 1px solid #30363d;
-            border-radius: 4px;
-            padding: 2px 7px;
         }
 
         .fdc3-banner {
             display: none;
             align-items: center;
             justify-content: space-between;
-            padding: 7px 20px;
+            padding: 6px 16px;
             background: rgba(88, 166, 255, 0.1);
             border-bottom: 1px solid rgba(88, 166, 255, 0.25);
-            font-size: 12px;
+            font-size: 11px;
             color: #58a6ff;
             flex-shrink: 0;
         }
@@ -85,7 +75,7 @@
         @keyframes bannerIn {
             from {
                 opacity: 0;
-                transform: translateY(-6px);
+                transform: translateY(-4px);
             }
 
             to {
@@ -97,14 +87,14 @@
         .fdc3-banner-label {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             font-weight: 600;
         }
 
         .fdc3-banner-label::before {
             content: '';
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             background: #58a6ff;
             animation: pulse 1.5s infinite;
@@ -118,52 +108,44 @@
             }
 
             50% {
-                box-shadow: 0 0 0 6px rgba(88, 166, 255, 0.1);
+                box-shadow: 0 0 0 5px rgba(88, 166, 255, 0.1);
             }
         }
 
-        .ticket-wrap {
+        .ticket-content {
             flex: 1;
-            padding: 24px;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
+            padding: 16px;
             overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
 
-        .ticket-card {
-            background: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 12px;
-            width: 100%;
-            max-width: 400px;
-            padding: 20px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        .compact-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
         }
 
         .instrument-head {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            background: #161b22;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid #30363d;
         }
 
         .inst-search {
-            background: #0d1117;
-            border: 1px solid #30363d;
-            border-radius: 8px;
-            padding: 10px 14px;
+            background: transparent;
+            border: none;
             font-size: 18px;
             font-weight: 700;
             color: #58a6ff;
             outline: none;
             text-transform: uppercase;
-            width: 140px;
-            transition: border-color 0.2s;
-        }
-
-        .inst-search:focus {
-            border-color: #58a6ff;
+            width: 120px;
         }
 
         .time-badge {
@@ -185,22 +167,20 @@
         .price-strip {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 24px;
+            gap: 10px;
         }
 
         .price-box {
-            background: #0d1117;
+            background: #161b22;
             border: 1px solid #30363d;
             border-radius: 8px;
-            padding: 12px;
+            padding: 10px;
             text-align: center;
             cursor: pointer;
             transition: all 0.15s;
         }
 
         .price-box:hover {
-            background: #21262d;
             border-color: #484f58;
         }
 
@@ -215,15 +195,15 @@
         }
 
         .price-label {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 600;
             color: #7d8590;
             text-transform: uppercase;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
 
         .price-value {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 700;
             font-variant-numeric: tabular-nums;
         }
@@ -237,45 +217,80 @@
         }
 
         .form-group {
-            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
         }
 
         .form-label {
-            display: block;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
             color: #7d8590;
-            margin-bottom: 6px;
+            text-transform: uppercase;
         }
 
-        .qty-input {
+        .input-field {
             width: 100%;
             background: #0d1117;
             border: 1px solid #30363d;
-            border-radius: 8px;
-            padding: 10px 14px;
-            font-size: 15px;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 14px;
             color: #e6edf3;
             outline: none;
             transition: border-color 0.2s;
         }
 
-        .qty-input:focus {
+        .input-field:focus {
             border-color: #58a6ff;
+        }
+
+        /* Segmented Control for Order Type */
+        .order-type-toggle {
+            display: flex;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            overflow: hidden;
+            height: 36px;
+        }
+
+        .type-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #7d8590;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .type-btn.active {
+            background: #30363d;
+            color: #e6edf3;
+        }
+
+        .limit-price-group {
+            display: none;
+        }
+
+        .limit-price-group.visible {
+            display: flex;
         }
 
         .btn-submit {
             width: 100%;
-            padding: 14px;
+            padding: 12px;
             border: none;
-            border-radius: 8px;
-            font-size: 16px;
+            border-radius: 6px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
-            color: #fff;
             transition: all 0.2s;
             background: #21262d;
             color: #7d8590;
+            margin-top: 8px;
         }
 
         .btn-submit.active-buy {
@@ -302,8 +317,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(13, 17, 23, 0.9);
-            border-radius: 12px;
+            background: rgba(13, 17, 23, 0.95);
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -311,6 +325,7 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s;
+            z-index: 10;
         }
 
         .success-overlay.show {
@@ -319,13 +334,13 @@
         }
 
         .check-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
+            font-size: 40px;
+            margin-bottom: 12px;
             color: #3fb950;
         }
 
         .success-text {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
             color: #e6edf3;
         }
@@ -337,36 +352,51 @@
         <span class="fdc3-banner-label" id="fdc3-banner-label">FDC3 context received</span>
     </div>
 
-    <div class="ticket-wrap">
-        <div class="ticket-card" style="position: relative;">
-            <div class="instrument-head">
-                <input type="text" id="ticker-input" class="inst-search" value="AAPL"
-                    oninput="changeTicker(this.value)" />
-                <div class="time-badge">Live Pricing</div>
-            </div>
+    <div class="ticket-content" style="position: relative;">
+        <!-- Instrument & Life Price -->
+        <div class="instrument-head">
+            <input type="text" id="ticker-input" class="inst-search" value="AAPL" oninput="changeTicker(this.value)" />
+            <div class="time-badge">Live Pricing</div>
+        </div>
 
-            <div class="price-strip">
-                <div class="price-box sell" id="box-sell" onclick="selectSide('SELL')">
-                    <div class="price-label">Sell</div>
-                    <div class="price-value" id="price-bid">189.32</div>
-                </div>
-                <div class="price-box buy" id="box-buy" onclick="selectSide('BUY')">
-                    <div class="price-label">Buy</div>
-                    <div class="price-value" id="price-ask">189.36</div>
-                </div>
+        <!-- Bid/Ask Boxes -->
+        <div class="price-strip">
+            <div class="price-box sell" id="box-sell" onclick="selectSide('SELL')">
+                <div class="price-label">Sell</div>
+                <div class="price-value" id="price-bid">189.32</div>
             </div>
+            <div class="price-box buy" id="box-buy" onclick="selectSide('BUY')">
+                <div class="price-label">Buy</div>
+                <div class="price-value" id="price-ask">189.36</div>
+            </div>
+        </div>
 
+        <!-- Order Type Toggle -->
+        <div class="form-group">
+            <label class="form-label">Order Type</label>
+            <div class="order-type-toggle">
+                <button class="type-btn active" id="type-market" onclick="setOrderType('MARKET')">Market</button>
+                <button class="type-btn" id="type-limit" onclick="setOrderType('LIMIT')">Limit</button>
+            </div>
+        </div>
+
+        <!-- Quantity & Limit Price Row -->
+        <div class="compact-row">
             <div class="form-group">
                 <label class="form-label">Quantity</label>
-                <input type="number" id="qty-input" class="qty-input" value="100" />
+                <input type="number" id="qty-input" class="input-field" value="100" />
             </div>
-
-            <button class="btn-submit" id="btn-submit" onclick="submitOrder()">Select side to execute</button>
-
-            <div class="success-overlay" id="success-overlay">
-                <div class="check-icon">✓</div>
-                <div class="success-text">Order Submitted</div>
+            <div class="form-group limit-price-group" id="limit-price-wrap">
+                <label class="form-label">Limit Price</label>
+                <input type="number" id="limit-input" class="input-field" step="0.01" value="189.34" />
             </div>
+        </div>
+
+        <button class="btn-submit" id="btn-submit" onclick="submitOrder()">Select side to execute</button>
+
+        <div class="success-overlay" id="success-overlay">
+            <div class="check-icon">✓</div>
+            <div class="success-text">Order Submitted</div>
         </div>
     </div>
 
@@ -374,6 +404,7 @@
         let currentTicker = 'AAPL';
         let basePrice = 189.34;
         let selectedSide = null;
+        let orderType = 'MARKET';
         let priceInterval = null;
 
         const MOCK_PRICES = {
@@ -386,7 +417,6 @@
         function startPricing() {
             if (priceInterval) clearInterval(priceInterval);
             priceInterval = setInterval(() => {
-                // Small random walk
                 const spread = currentTicker.includes('/') ? 0.0002 : 0.04;
                 basePrice = basePrice + (Math.random() - 0.48) * (spread * 5);
                 if (basePrice < 1) basePrice = Math.max(0.0001, basePrice);
@@ -403,21 +433,40 @@
         function changeTicker(val) {
             currentTicker = val.toUpperCase();
             basePrice = MOCK_PRICES[currentTicker] || 100.00;
+            document.getElementById('limit-input').value = basePrice.toFixed(currentTicker.includes('/') ? 4 : 2);
             startPricing();
+        }
+
+        function setOrderType(type) {
+            orderType = type;
+            document.getElementById('type-market').classList.toggle('active', type === 'MARKET');
+            document.getElementById('type-limit').classList.toggle('active', type === 'LIMIT');
+            document.getElementById('limit-price-wrap').classList.toggle('visible', type === 'LIMIT');
+            updateSubmitButton();
         }
 
         function selectSide(side) {
             selectedSide = side;
             document.getElementById('box-buy').className = 'price-box buy' + (side === 'BUY' ? ' selected-buy' : '');
             document.getElementById('box-sell').className = 'price-box sell' + (side === 'SELL' ? ' selected-sell' : '');
+            updateSubmitButton();
+        }
 
+        function updateSubmitButton() {
             const btn = document.getElementById('btn-submit');
-            if (side === 'BUY') {
+            if (!selectedSide) {
+                btn.className = 'btn-submit';
+                btn.textContent = 'Select side to execute';
+                return;
+            }
+
+            const label = orderType === 'MARKET' ? 'Market' : 'Limit';
+            if (selectedSide === 'BUY') {
                 btn.className = 'btn-submit active-buy';
-                btn.textContent = 'Buy Market';
+                btn.textContent = `Buy ${label}`;
             } else {
                 btn.className = 'btn-submit active-sell';
-                btn.textContent = 'Sell Market';
+                btn.textContent = `Sell ${label}`;
             }
         }
 
@@ -427,7 +476,13 @@
 
             const qtyStr = document.getElementById('qty-input').value;
             const qtyNum = parseInt(qtyStr) || 100;
-            const priceNum = selectedSide === 'BUY' ? parseFloat(document.getElementById('price-ask').textContent) : parseFloat(document.getElementById('price-bid').textContent);
+
+            let priceNum;
+            if (orderType === 'LIMIT') {
+                priceNum = parseFloat(document.getElementById('limit-input').value);
+            } else {
+                priceNum = selectedSide === 'BUY' ? parseFloat(document.getElementById('price-ask').textContent) : parseFloat(document.getElementById('price-bid').textContent);
+            }
 
             const today = new Date();
             const dateStr = today.toISOString().split('T')[0];
@@ -438,6 +493,7 @@
                 side: selectedSide,
                 qty: qtyNum,
                 price: priceNum,
+                type: orderType,
                 time: `${dateStr} ${timeStr}`
             };
 
@@ -449,13 +505,16 @@
                 context: { type: 'fdc3.order', details }
             }, '*');
 
-            window.parent.postMessage({
-                source: 'mcp-fdc3-app',
-                type: 'navigateAndRaiseIntent',
-                targetTab: 'tradeBlotter',
-                intent: 'RecordNewTrade',
-                context: { type: 'fdc3.trade', details }
-            }, '*');
+            // If Market, also record as Trade immediately
+            if (orderType === 'MARKET') {
+                window.parent.postMessage({
+                    source: 'mcp-fdc3-app',
+                    type: 'navigateAndRaiseIntent',
+                    targetTab: 'tradeBlotter',
+                    intent: 'RecordNewTrade',
+                    context: { type: 'fdc3.trade', details }
+                }, '*');
+            }
 
             overlay.classList.add('show');
             setTimeout(() => {
@@ -463,20 +522,15 @@
                 selectedSide = null;
                 document.getElementById('box-buy').className = 'price-box buy';
                 document.getElementById('box-sell').className = 'price-box sell';
-                document.getElementById('btn-submit').className = 'btn-submit';
-                document.getElementById('btn-submit').textContent = 'Select side to execute';
-            }, 1500);
+                updateSubmitButton();
+            }, 1000);
         }
 
-        // FDC3 Inbound message listener
         window.addEventListener('message', event => {
             const msg = event.data;
             if (!msg || msg.source !== 'mcp-fdc3-platform') return;
 
-            console.log('%c[Order Ticket] FDC3 message', 'color:#d29922;font-weight:bold;', msg);
-
             if (msg.type === 'raiseIntent') {
-                // AI explicit SubmitOrder intent handling
                 if (msg.intent === 'SubmitOrder' && msg.context?.type === 'fdc3.order') {
                     const details = msg.context.details || {};
                     if (details.ticker) {
@@ -485,13 +539,14 @@
                     }
                     if (details.quantity) document.getElementById('qty-input').value = details.quantity;
                     if (details.side) selectSide(details.side.toUpperCase());
+                    if (details.type) setOrderType(details.type.toUpperCase());
+                    if (details.price && details.type === 'LIMIT') document.getElementById('limit-input').value = details.price;
 
                     document.getElementById('fdc3-banner-label').textContent = `🔵 FDC3 SubmitOrder staged for ${details.ticker}`;
                     const banner = document.getElementById('fdc3-banner');
                     banner.classList.add('visible');
                     setTimeout(() => banner.classList.remove('visible'), 4000);
                 }
-                // Generio ViewInstrument intent handling
                 else {
                     const ctx = msg.context;
                     let ticker = ctx?.id?.ticker || ctx?.ticker || ctx?.symbol || ctx?.instruments?.[0]?.id?.ticker || null;
@@ -509,7 +564,6 @@
             }
         });
 
-        // Initialize
         startPricing();
     </script>
 </body>

@@ -546,10 +546,10 @@
           <th onclick="sortBy('time')">Time</th>
           <th onclick="sortBy('ticker')">Instrument</th>
           <th onclick="sortBy('side')">Side</th>
+          <th onclick="sortBy('type')">Type</th>
           <th onclick="sortBy('qty')">Qty</th>
           <th onclick="sortBy('price')">Price</th>
           <th onclick="sortBy('notional')">Notional</th>
-          <th onclick="sortBy('pnl')">P&amp;L</th>
           <th onclick="sortBy('status')">Status</th>
           <th>Trader</th>
           <th style="color:#484f58">Actions</th>
@@ -575,24 +575,16 @@
     const mockDate = getMockDate();
 
     const ORDERS = [
-      { id: 'O001', time: `${mockDate} 09:31:04`, ticker: 'AAPL', company: 'Apple Inc.', side: 'BUY', qty: 500, price: 189.34, notional: 94670, pnl: 1840, status: 'FILLED', trader: 'J. Rivera' },
-      { id: 'O002', time: `${mockDate} 09:32:11`, ticker: 'MSFT', company: 'Microsoft Corp.', side: 'BUY', qty: 200, price: 418.92, notional: 83784, pnl: 960, status: 'FILLED', trader: 'A. Chen' },
-      { id: 'O003', time: `${mockDate} 09:33:45`, ticker: 'TSLA', company: 'Tesla Inc.', side: 'SELL', qty: 150, price: 248.60, notional: 37290, pnl: -520, status: 'FILLED', trader: 'J. Rivera' },
-      { id: 'O004', time: `${mockDate} 09:35:22`, ticker: 'NVDA', company: 'NVIDIA Corp.', side: 'BUY', qty: 80, price: 875.40, notional: 70032, pnl: 3120, status: 'FILLED', trader: 'M. Okafor' },
-      { id: 'O005', time: `${mockDate} 09:37:08`, ticker: 'AMZN', company: 'Amazon.com Inc.', side: 'BUY', qty: 60, price: 193.20, notional: 11592, pnl: 210, status: 'PARTIAL', trader: 'A. Chen' },
-      { id: 'O006', time: `${mockDate} 09:38:50`, ticker: 'GOOGL', company: 'Alphabet Inc.', side: 'SELL', qty: 40, price: 172.15, notional: 6886, pnl: 340, status: 'FILLED', trader: 'M. Okafor' },
-      { id: 'O007', time: `${mockDate} 09:39:33`, ticker: 'META', company: 'Meta Platforms Inc.', side: 'BUY', qty: 120, price: 583.70, notional: 70044, pnl: 1580, status: 'FILLED', trader: 'J. Rivera' },
-      { id: 'O008', time: `${mockDate} 09:41:17`, ticker: 'JPM', company: 'JPMorgan Chase & Co.', side: 'SELL', qty: 300, price: 212.80, notional: 63840, pnl: -840, status: 'FILLED', trader: 'A. Chen' },
-      { id: 'O009', time: `${mockDate} 09:43:05`, ticker: 'GS', company: 'Goldman Sachs Group', side: 'BUY', qty: 50, price: 498.60, notional: 24930, pnl: 620, status: 'PENDING', trader: 'M. Okafor' },
-      { id: 'O010', time: `${mockDate} 09:44:29`, ticker: 'NFLX', company: 'Netflix Inc.', side: 'SELL', qty: 90, price: 698.20, notional: 62838, pnl: 1920, status: 'FILLED', trader: 'J. Rivera' },
-      { id: 'O011', time: `${mockDate} 09:46:14`, ticker: 'EUR/USD', company: 'Euro / US Dollar', side: 'BUY', qty: 1000000, price: 1.0854, notional: 1085400, pnl: 0, status: 'PENDING', trader: 'A. Chen' },
-      { id: 'O012', time: `${mockDate} 09:47:02`, ticker: 'UNH', company: 'UnitedHealth Group', side: 'SELL', qty: 30, price: 529.40, notional: 15882, pnl: -310, status: 'CANCELLED', trader: 'M. Okafor' },
-      { id: 'O013', time: `${mockDate} 09:48:55`, ticker: 'LLY', company: 'Eli Lilly & Co.', side: 'BUY', qty: 25, price: 867.50, notional: 21688, pnl: 750, status: 'FILLED', trader: 'J. Rivera' },
-      { id: 'O014', time: `${mockDate} 09:50:11`, ticker: 'V', company: 'Visa Inc.', side: 'BUY', qty: 180, price: 283.40, notional: 51012, pnl: 1260, status: 'FILLED', trader: 'A. Chen' },
-      { id: 'O015', time: `${mockDate} 09:52:38`, ticker: 'SPY', company: 'SPDR S&P 500 ETF', side: 'BUY', qty: 1000, price: 521.80, notional: 521800, pnl: 8400, status: 'PARTIAL', trader: 'M. Okafor' },
-      { id: 'O016', time: `${mockDate} 09:53:44`, ticker: 'QQQ', company: 'Invesco QQQ Trust', side: 'SELL', qty: 500, price: 448.20, notional: 224100, pnl: 3200, status: 'FILLED', trader: 'J. Rivera' },
-      { id: 'O017', time: `${mockDate} 09:55:00`, ticker: 'AMD', company: 'Advanced Micro Devices', side: 'BUY', qty: 400, price: 178.90, notional: 71560, pnl: -1450, status: 'FILLED', trader: 'A. Chen' },
-      { id: 'O018', time: `${mockDate} 09:56:33`, ticker: 'COIN', company: 'Coinbase Global', side: 'SELL', qty: 100, price: 234.10, notional: 23410, pnl: 980, status: 'PENDING', trader: 'M. Okafor' },
+      { id: 'O001', time: `${mockDate} 09:31:04`, ticker: 'AAPL', company: 'Apple Inc.', side: 'BUY', type: 'MARKET', qty: 500, price: 189.34, notional: 94670, status: 'FILLED', trader: 'J. Rivera' },
+      { id: 'O002', time: `${mockDate} 09:32:11`, ticker: 'MSFT', company: 'Microsoft Corp.', side: 'BUY', type: 'MARKET', qty: 200, price: 418.92, notional: 83784, status: 'FILLED', trader: 'A. Chen' },
+      { id: 'O003', time: `${mockDate} 09:33:45`, ticker: 'TSLA', company: 'Tesla Inc.', side: 'SELL', type: 'LIMIT', qty: 150, price: 248.60, notional: 37290, status: 'FILLED', trader: 'J. Rivera' },
+      { id: 'O004', time: `${mockDate} 09:35:22`, ticker: 'NVDA', company: 'NVIDIA Corp.', side: 'BUY', type: 'MARKET', qty: 80, price: 875.40, notional: 70032, status: 'FILLED', trader: 'M. Okafor' },
+      { id: 'O005', time: `${mockDate} 09:37:08`, ticker: 'AMZN', company: 'Amazon.com Inc.', side: 'BUY', type: 'MARKET', qty: 60, price: 193.20, notional: 11592, status: 'PARTIAL', trader: 'A. Chen' },
+      { id: 'O006', time: `${mockDate} 09:38:50`, ticker: 'GOOGL', company: 'Alphabet Inc.', side: 'SELL', type: 'MARKET', qty: 40, price: 172.15, notional: 6886, status: 'FILLED', trader: 'M. Okafor' },
+      { id: 'O007', time: `${mockDate} 09:39:33`, ticker: 'META', company: 'Meta Platforms Inc.', side: 'BUY', type: 'MARKET', qty: 120, price: 583.70, notional: 70044, status: 'FILLED', trader: 'J. Rivera' },
+      { id: 'O008', time: `${mockDate} 09:41:17`, ticker: 'JPM', company: 'JPMorgan Chase & Co.', side: 'SELL', type: 'MARKET', qty: 300, price: 212.80, notional: 63840, status: 'FILLED', trader: 'A. Chen' },
+      { id: 'O009', time: `${mockDate} 09:43:05`, ticker: 'GS', company: 'Goldman Sachs Group', side: 'BUY', type: 'LIMIT', qty: 50, price: 498.60, notional: 24930, status: 'PENDING', trader: 'M. Okafor' },
+      { id: 'O010', time: `${mockDate} 09:44:29`, ticker: 'NFLX', company: 'Netflix Inc.', side: 'SELL', type: 'MARKET', qty: 90, price: 698.20, notional: 62838, status: 'FILLED', trader: 'J. Rivera' },
     ];
 
     let currentFilter = 'all', sortCol = 'time', sortDir = -1, selectedId = null, fdc3Ticker = null;
@@ -625,7 +617,6 @@
       return n.toFixed(2);
     }
 
-    // ── FDC3 action: postMessage to parent platform ────────────────────────
     function sendFdc3Action(ticker, company, targetTab) {
       const context = {
         type: 'fdc3.instrument',
@@ -635,7 +626,7 @@
       window.parent.postMessage({
         source: 'mcp-fdc3-app',
         type: 'navigateAndRaiseIntent',
-        targetTab,               // 'news' | 'watchlist'
+        targetTab,
         intent: 'ViewInstrument',
         context,
       }, '*');
@@ -664,28 +655,25 @@
         const sel = t.id === selectedId ? ' selected' : '';
         const highlight = isFdc3 ? ' fdc3-highlight' : '';
         return `<tr class="${sel}${highlight}" onclick="selectRow('${t.id}')">
-        <td style="color:#8b949e;font-size:12px;font-variant-numeric:tabular-nums">${t.time}</td>
+        <td style="color:#8b949e;font-size:11px;font-variant-numeric:tabular-nums">${t.time}</td>
         <td><div class="ticker">${t.ticker}</div><div class="company">${t.company}</div></td>
         <td class="side-${t.side.toLowerCase()}">${t.side}</td>
+        <td style="font-size:11px;color:#7d8590">${t.type || 'MARKET'}</td>
         <td style="font-variant-numeric:tabular-nums">${t.qty.toLocaleString()}</td>
-        <td style="font-variant-numeric:tabular-nums">$${t.price.toFixed(2)}</td>
+        <td style="font-variant-numeric:tabular-nums">$${t.price.toFixed(t.ticker.includes('/') ? 4 : 2)}</td>
         <td style="font-variant-numeric:tabular-nums;color:#c9d1d9">$${fmt(t.notional)}</td>
-        <td class="${pnlClass}" style="font-variant-numeric:tabular-nums">${pnlStr}</td>
         <td><span class="badge ${statusBadge}">${t.status}</span></td>
-        <td style="color:#8b949e;font-size:12px">${t.trader}</td>
+        <td style="color:#8b949e;font-size:11px">${t.trader}</td>
         <td>
           <div class="row-actions">
-            <button class="action-btn news" onclick="event.stopPropagation();sendFdc3Action('${t.ticker}','${t.company.replace(/'/g, "\\'")}','news')" title="View news for ${t.ticker}">📰 News</button>
-            <button class="action-btn watchlist" onclick="event.stopPropagation();sendFdc3Action('${t.ticker}','${t.company.replace(/'/g, "\\'")}','watchlist')" title="View ${t.ticker} on watchlist">📊 Watchlist</button>
+            <button class="action-btn news" onclick="event.stopPropagation();sendFdc3Action('${t.ticker}','${t.company.replace(/'/g, "\\'")}','news')">📰 News</button>
+            <button class="action-btn watchlist" onclick="event.stopPropagation();sendFdc3Action('${t.ticker}','${t.company.replace(/'/g, "\\'")}','watchlist')">📊 Watchlist</button>
           </div>
         </td>
       </tr>`;
       }).join('');
       document.getElementById('showing').textContent = rows.length;
       document.getElementById('total').textContent = ORDERS.length;
-      const total = ORDERS.reduce((s, t) => s + t.notional, 0);
-      document.getElementById('total-notional').textContent = '$' + fmt(total);
-      document.getElementById('trade-count').textContent = ORDERS.length;
       const now = new Date();
       document.getElementById('last-updated').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     }
@@ -698,11 +686,9 @@
       renderTable();
     }
 
-    // ── FDC3 inbound: respond to platform raiseIntent ──────────────────────
     window.addEventListener('message', event => {
       const msg = event.data;
       if (!msg || msg.source !== 'mcp-fdc3-platform') return;
-      console.log('%c[Order Blotter] FDC3 message', 'color:#58a6ff;font-weight:bold;', msg);
       if (msg.type === 'raiseIntent') {
         const ctx = msg.context;
         let ticker = ctx?.id?.ticker || ctx?.ticker || ctx?.symbol || ctx?.instruments?.[0]?.id?.ticker || null;
@@ -718,31 +704,22 @@
         const newOrder = {
           id: 'O' + Math.floor(Math.random() * 1000).toString().padStart(3, '0'),
           time: d.time,
-          ticker: d.ticker,
-          company: d.ticker, // mockup
-          side: d.side,
+          ticker: d.ticker.toUpperCase(),
+          company: d.ticker.toUpperCase(),
+          side: d.side.toUpperCase(),
+          type: d.type ? d.type.toUpperCase() : 'MARKET',
           qty: d.qty,
           price: d.price,
           notional: d.qty * d.price,
           pnl: 0,
-          status: 'FILLED',
+          status: (d.type === 'LIMIT' ? 'PENDING' : 'FILLED'),
           trader: 'D. Novavi'
         };
         ORDERS.unshift(newOrder);
         renderTable();
-        showToast('watchlist', 'New Order: ' + d.ticker);
       }
       if (msg.intent === 'ClearFilter') { clearFdc3Filter(); }
     });
-
-    setInterval(() => {
-      ORDERS.forEach(t => { if (t.status === 'FILLED' || t.status === 'PARTIAL') { t.pnl = Math.round((t.pnl + (Math.random() - .48) * 30) * 10) / 10; } });
-      const totalPnl = ORDERS.reduce((s, t) => s + t.pnl, 0);
-      const el = document.getElementById('total-pnl');
-      el.textContent = (totalPnl >= 0 ? '+' : '') + ' $' + fmt(totalPnl);
-      el.className = 'stat-value ' + (totalPnl >= 0 ? 'pos' : 'neg');
-      renderTable();
-    }, 3000);
 
     renderTable();
   </script>
