@@ -16,6 +16,7 @@
 **/*.njsproj
 **/*.sln
 **/*.sw?
+**/.env
 
 # mcp-fdc3 (root)
 # ---------------
