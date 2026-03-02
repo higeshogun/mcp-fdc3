@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Watchlist — MCP-FDC3 Demo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0d1117;
+            color: #e6edf3;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            height: 52px;
+            background: #161b22;
+            border-bottom: 1px solid #30363d;
+            flex-shrink: 0
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center
+        }
+
+        .app-badge {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            background: rgba(63, 185, 80, .12);
+            border: 1px solid rgba(63, 185, 80, .3);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #3fb950
+        }
+
+        .fdc3-tag {
+            font-size: 11px;
+            font-weight: 600;
+            color: #7d8590;
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            padding: 2px 7px;
+            margin-left: 8px
+        }
+
+        .header-right {
+            font-size: 11px;
+            color: #7d8590
+        }
+
+        .header-right span {
+            color: #e6edf3;
+            font-weight: 600
+        }
+
+        .fdc3-banner {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            padding: 7px 20px;
+            background: rgba(88, 166, 255, .1);
+            border-bottom: 1px solid rgba(88, 166, 255, .25);
+            font-size: 12px;
+            color: #58a6ff;
+            flex-shrink: 0
+        }
+
+        .fdc3-banner.visible {
+            display: flex;
+            animation: bannerIn .3s ease
+        }
+
+        @keyframes bannerIn {
+            from {
+                opacity: 0;
+                transform: translateY(-6px)
+            }
+
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+
+        .fdc3-banner-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600
+        }
+
+        .fdc3-banner-label::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #58a6ff
+        }
+
+        .fdc3-clear-btn {
+            background: transparent;
+            border: 1px solid rgba(88, 166, 255, .3);
+            border-radius: 5px;
+            color: #58a6ff;
+            font-size: 11px;
+            padding: 2px 8px;
+            cursor: pointer
+        }
+
+        .index-bar {
+            display: flex;
+            gap: 0;
+            background: #0d1117;
+            border-bottom: 1px solid #21262d;
+            flex-shrink: 0;
+            overflow-x: auto
+        }
+
+        .index-pill {
+            display: flex;
+            flex-direction: column;
+            padding: 8px 18px;
+            border-right: 1px solid #21262d;
+            cursor: pointer;
+            transition: background .15s;
+            min-width: 100px
+        }
+
+        .index-pill:hover {
+            background: #161b22
+        }
+
+        .index-name {
+            font-size: 10px;
+            color: #7d8590;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .05em
+        }
+
+        .index-price {
+            font-size: 14px;
+            font-weight: 700;
+            margin: 2px 0 1px
+        }
+
+        .index-chg {
+            font-size: 11px;
+            font-weight: 500
+        }
+
+        .pos {
+            color: #3fb950
+        }
+
+        .neg {
+            color: #f85149
+        }
+
+        .list-wrap {
+            flex: 1;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #30363d transparent
+        }
+
+        .list-wrap::-webkit-scrollbar {
+            width: 6px
+        }
+
+        .list-wrap::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 3px
+        }
+
+        .list-header {
+            display: grid;
+            grid-template-columns: 1fr 110px 90px 90px 60px;
+            padding: 8px 20px;
+            background: #161b22;
+            border-bottom: 1px solid #21262d;
+            position: sticky;
+            top: 0;
+            z-index: 2
+        }
+
+        .col-h {
+            font-size: 10px;
+            font-weight: 600;
+            color: #7d8590;
+            text-transform: uppercase;
+            letter-spacing: .06em
+        }
+
+        .col-h.r {
+            text-align: right
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 110px 90px 90px 60px;
+            padding: 11px 20px;
+            border-bottom: 1px solid #161b22;
+            cursor: pointer;
+            transition: background .12s;
+            align-items: center
+        }
+
+        .row:hover {
+            background: rgba(88, 166, 255, .04)
+        }
+
+        .row.fdc3-highlight {
+            background: rgba(88, 166, 255, .1) !important;
+            border-left: 3px solid #58a6ff;
+            animation: rowGlow .6s ease
+        }
+
+        @keyframes rowGlow {
+            0% {
+                background: rgba(88, 166, 255, .3)
+            }
+
+            100% {
+                background: rgba(88, 166, 255, .1)
+            }
+        }
+
+        .ticker {
+            font-weight: 700;
+            font-size: 14px
+        }
+
+        .company {
+            font-size: 11px;
+            color: #7d8590;
+            margin-top: 1px
+        }
+
+        .price-cell {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+            font-size: 14px;
+            font-weight: 600
+        }
+
+        .chg-cell {
+            text-align: right;
+            font-size: 12px;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums
+        }
+
+        .chg-cell.pos {
+            color: #3fb950
+        }
+
+        .chg-cell.neg {
+            color: #f85149
+        }
+
+        .vol-cell {
+            text-align: right;
+            font-size: 12px;
+            color: #7d8590
+        }
+
+        .spark {
+            width: 60px;
+            height: 24px;
+            display: block;
+            margin-left: auto
+        }
+
+        footer {
+            background: #161b22;
+            border-top: 1px solid #21262d;
+            padding: 8px 20px;
+            flex-shrink: 0;
+            font-size: 11px;
+            color: #7d8590;
+            display: flex;
+            justify-content: space-between;
+            align-items: center
+        }
+
+        footer span {
+            color: #c9d1d9;
+            font-weight: 500
+        }
+
+        .live-dot {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            color: #3fb950
+        }
+
+        .live-dot::before {
+            content: '';
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #3fb950;
+            animation: pulse 2s infinite
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 2px rgba(63, 185, 80, .25)
+            }
+
+            50% {
+                box-shadow: 0 0 0 5px rgba(63, 185, 80, .1)
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="fdc3-banner" id="fdc3-banner">
+        <span class="fdc3-banner-label" id="fdc3-banner-label">FDC3 context received</span>
+        <button class="fdc3-clear-btn" onclick="clearFdc3()">✕ Dismiss</button>
+    </div>
+    <div class="index-bar" id="index-bar"></div>
+    <div class="list-wrap">
+        <div class="list-header">
+            <div class="col-h">Instrument</div>
+            <div class="col-h r">Price</div>
+            <div class="col-h r">Change</div>
+            <div class="col-h r">Volume</div>
+            <div class="col-h r">7D</div>
+        </div>
+        <div id="rows"></div>
+    </div>
+    <footer>
+        <div>Last updated: <span id="last-upd">—</span></div>
+        <div class="live-dot">Market Open</div>
+    </footer>
+
+    <script>
+        const INDICES = [
+            { name: 'S&P 500', price: 5241.03, chg: +0.62 },
+            { name: 'NASDAQ', price: 16480.45, chg: +0.98 },
+            { name: 'DOW', price: 38721.12, chg: +0.31 },
+            { name: 'VIX', price: 14.82, chg: -4.20 },
+            { name: '10Y UST', price: 4.12, chg: -0.08, unit: '%' },
+        ];
+        const STOCKS = [
+            { ticker: 'AAPL', company: 'Apple Inc.', price: 189.34, chg: +1.82, chgPct: +0.97, vol: '42.1M', days: [184, 186, 185, 187, 188, 187, 189] },
+            { ticker: 'MSFT', company: 'Microsoft Corp.', price: 418.92, chg: +5.40, chgPct: +1.30, vol: '18.3M', days: [413, 414, 416, 415, 417, 416, 419] },
+            { ticker: 'NVDA', company: 'NVIDIA Corp.', price: 875.40, chg: +68.2, chgPct: +8.44, vol: '61.2M', days: [790, 810, 820, 830, 840, 855, 875] },
+            { ticker: 'TSLA', company: 'Tesla Inc.', price: 248.60, chg: -3.80, chgPct: -1.51, vol: '87.4M', days: [265, 262, 258, 256, 253, 252, 249] },
+            { ticker: 'AMZN', company: 'Amazon.com Inc.', price: 193.20, chg: +2.10, chgPct: +1.10, vol: '29.8M', days: [188, 189, 190, 191, 191, 192, 193] },
+            { ticker: 'GOOGL', company: 'Alphabet Inc.', price: 172.15, chg: -0.85, chgPct: -0.49, vol: '22.1M', days: [174, 173, 172, 173, 173, 172, 172] },
+            { ticker: 'META', company: 'Meta Platforms Inc.', price: 583.70, chg: +11.3, chgPct: +1.97, vol: '15.7M', days: [567, 571, 574, 577, 579, 580, 584] },
+            { ticker: 'JPM', company: 'JPMorgan Chase & Co.', price: 212.80, chg: -1.90, chgPct: -0.88, vol: '9.4M', days: [217, 216, 215, 214, 213, 213, 213] },
+            { ticker: 'GS', company: 'Goldman Sachs Group', price: 498.60, chg: +4.20, chgPct: +0.85, vol: '2.1M', days: [491, 492, 494, 495, 496, 497, 499] },
+            { ticker: 'V', company: 'Visa Inc.', price: 283.40, chg: +2.30, chgPct: +0.82, vol: '5.8M', days: [278, 279, 280, 281, 282, 282, 283] },
+            { ticker: 'LLY', company: 'Eli Lilly & Co.', price: 867.50, chg: +18.4, chgPct: +2.17, vol: '3.2M', days: [825, 838, 845, 852, 858, 864, 868] },
+            { ticker: 'NFLX', company: 'Netflix Inc.', price: 698.20, chg: +13.1, chgPct: +1.91, vol: '4.1M', days: [677, 681, 685, 688, 691, 694, 698] },
+            { ticker: 'EUR/USD', company: 'Euro / US Dollar', price: 1.0854, chg: -0.0012, chgPct: -0.11, vol: 'OTC', days: [1.081, 1.082, 1.081, 1.084, 1.086, 1.087, 1.085] },
+            { ticker: 'GBP/USD', company: 'British Pound / USD', price: 1.2580, chg: +0.0045, chgPct: +0.36, vol: 'OTC', days: [1.251, 1.250, 1.253, 1.255, 1.256, 1.257, 1.258] },
+            { ticker: 'USD/JPY', company: 'US Dollar / Yen', price: 150.32, chg: +0.45, chgPct: +0.30, vol: 'OTC', days: [148.5, 149.1, 149.6, 150.1, 150.4, 150.6, 150.3] }
+        ];
+
+        let fdc3Ticker = null;
+
+        function sparkPath(days, color) {
+            const mn = Math.min(...days), mx = Math.max(...days), range = mx - mn || 1;
+            const W = 60, H = 24;
+            const pts = days.map((v, i) => { const x = (i / (days.length - 1)) * W, y = H - ((v - mn) / range) * (H - 4) + 2; return `${x},${y}`; });
+            return `<svg class="spark" viewBox="0 0 ${W} ${H}" fill="none"><polyline points="${pts.join(' ')}" stroke="${color}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+        }
+
+        function renderIndices() {
+            document.getElementById('index-bar').innerHTML = INDICES.map(idx => {
+                const pos = idx.chg >= 0;
+                const val = idx.unit ? idx.price.toFixed(2) + idx.unit : idx.price.toLocaleString('en-US', { minimumFractionDigits: 2 });
+                return `<div class="index-pill"><div class="index-name">${idx.name}</div><div class="index-price ${pos ? 'pos' : 'neg'}">${val}</div><div class="index-chg ${pos ? 'pos' : 'neg'}">${pos ? '+' : ''}${idx.chg.toFixed(2)}${idx.unit ? '' : '%'}</div></div>`;
+            }).join('');
+        }
+
+        function renderRows() {
+            document.getElementById('rows').innerHTML = STOCKS.map(s => {
+                const pos = s.chg >= 0;
+                const color = pos ? '#3fb950' : '#f85149';
+                const isFdc3 = fdc3Ticker && s.ticker.toUpperCase() === fdc3Ticker;
+                return `<div class="row${isFdc3 ? ' fdc3-highlight' : ''}" id="row-${s.ticker}" onclick="broadcastInstrument('${s.ticker}')">
+      <div><div class="ticker">${s.ticker}</div><div class="company">${s.company}</div></div>
+      <div class="price-cell">$${s.price.toFixed(2)}</div>
+      <div class="chg-cell ${pos ? 'pos' : 'neg'}">${pos ? '+' : ''}${s.chgPct.toFixed(2)}%<br><span style="font-size:11px;font-weight:400">${pos ? '+' : ''}$${Math.abs(s.chg).toFixed(2)}</span></div>
+      <div class="vol-cell">${s.vol}</div>
+      <div>${sparkPath(s.days, color)}</div>
+    </div>`;
+            }).join('');
+            document.getElementById('last-upd').textContent = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        function broadcastInstrument(ticker) {
+            console.log(`[Watchlist] Broadcasting instrument: ${ticker}`);
+            window.parent.postMessage({
+                source: 'mcp-fdc3-app',
+                type: 'navigateAndRaiseIntent',
+                intent: 'ViewInstrument',
+                context: {
+                    type: 'fdc3.instrument',
+                    id: { ticker: ticker }
+                }
+            }, '*');
+
+            // Highlight locally
+            fdc3Ticker = ticker;
+            document.getElementById('fdc3-banner-label').textContent = `🔵 FDC3 ViewInstrument — broadcasting ${ticker}`;
+            document.getElementById('fdc3-banner').classList.add('visible');
+            renderRows();
+        }
+
+        function clearFdc3() {
+            fdc3Ticker = null;
+            document.getElementById('fdc3-banner').classList.remove('visible');
+            renderRows();
+        }
+
+        // ── FDC3 postMessage listener ─────────────
+        window.addEventListener('message', event => {
+            const msg = event.data;
+            if (!msg || msg.source !== 'mcp-fdc3-platform') return;
+            console.log('%c[Watchlist] FDC3 message', 'color:#3fb950;font-weight:bold;', msg);
+            if (msg.type === 'raiseIntent') {
+                const ctx = msg.context;
+                let ticker = ctx?.id?.ticker || ctx?.ticker || ctx?.symbol || ctx?.instruments?.[0]?.id?.ticker || null;
+                if (ticker) {
+                    fdc3Ticker = ticker.toUpperCase();
+                    document.getElementById('fdc3-banner-label').textContent = `🔵 FDC3 ${msg.intent || 'context'} — highlighting ${fdc3Ticker}`;
+                    document.getElementById('fdc3-banner').classList.add('visible');
+                    renderRows();
+                    setTimeout(() => {
+                        const el = document.getElementById(`row-${fdc3Ticker}`);
+                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 100);
+                }
+            }
+            if (msg.intent === 'ClearFilter') { clearFdc3(); }
+        });
+
+        setInterval(() => {
+            STOCKS.forEach(s => {
+                const delta = s.price < 5 ? (Math.random() - .48) * .0005 : (Math.random() - .48) * .3;
+                s.price = Math.max(0.0001, +(s.price + delta).toFixed(s.price < 5 ? 4 : 2));
+                s.chg = +(s.chg + delta).toFixed(s.price < 5 ? 4 : 2);
+                s.chgPct = +((s.chg / s.price) * 100).toFixed(2);
+                s.days[s.days.length - 1] = s.price;
+            });
+            INDICES.forEach(idx => { const d = (Math.random() - .49) * .02; idx.chg = +(idx.chg + d).toFixed(2); });
+            renderIndices();
+            renderRows();
+        }, 2500);
+
+        renderIndices();
+        renderRows();
+    </script>
+</body>
+
+</html>

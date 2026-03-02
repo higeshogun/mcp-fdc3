@@ -113,16 +113,7 @@ const getAgent = async (model: BaseChatModel): Promise<any> => {
   return agent;
 };
 
-const getResponse = async (userPrompt: string): Promise<any> => {
-  console.log(`getResponse - started getting response for prompt: '${userPrompt}' ...`);
-
-  const response = await agent.invoke({
-    messages: [new HumanMessage(userPrompt)],
-  });
-
-  console.log(`getResponse - completed getting response for prompt: '${userPrompt}'`);
-  return response;
-};
+let chatHistory: any[] = [];
 
 
 console.log(`\nStarting AI agent service (${AI_AGENT_NAME})\n`);
@@ -131,27 +122,57 @@ const agent = await getAgent(model);
 const app = express();
 const port = Number(process.env.PORT) || 4000;
 
-app.use(express.json());
+let allowedOrigins: boolean | string[] = true;
+if (FRONTEND_PLATFORM_ORIGIN !== '*') {
+  allowedOrigins = FRONTEND_PLATFORM_ORIGIN.split(',').map(o => o.trim());
+}
 
 app.use(cors({
-  origin: FRONTEND_PLATFORM_ORIGIN === '*' ? true : FRONTEND_PLATFORM_ORIGIN,
+  origin: allowedOrigins,
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['content-type', 'x-client', 'authorization'],
 }));
+app.use(express.json());
 
 // Health check for Cloud Run readiness probes.
 app.get('/health', (_req, res) => res.status(200).json({ status: 'ok' }));
 
 // Handle POST requests for frontend-to-agent communication e.g. from frontend-platform
 app.post('/api/chat', async (req: Request, res: Response) => {
-  console.log(`\n\nReceived POST /api/chat (question: '${req.body?.question}')`);
-  const userPrompt = req.body?.question;
-  const response = await getResponse(userPrompt);
-  return res.status(200).json({
-    response
-  });
+  console.log(`\n\nReceived POST /api/chat (question: '${req.body?.question}', reset: ${req.body?.reset})`);
+  try {
+    if (req.body?.reset) {
+      chatHistory = [];
+      return res.status(200).json({ status: 'ok', response: { messages: [] } });
+    }
+
+    const userPrompt = req.body?.question;
+    chatHistory.push(new HumanMessage(userPrompt));
+
+    console.log(`getResponse - invoking agent ...`);
+    const response = await agent.invoke({
+      messages: chatHistory,
+    });
+    chatHistory = response.messages;
+    console.log(`getResponse - completed agent invocation`);
+
+    return res.status(200).json({
+      response
+    });
+  } catch (error: any) {
+    console.error('Error handling chat request:', error);
+    return res.status(500).json({ error: error.message || 'Internal Server Error' });
+  }
 });
 
+app.use((err: any, req: Request, res: Response, next: any) => {
+  console.error('Unhandled error:', err);
+  if (err instanceof SyntaxError && 'body' in err) {
+    console.error('JSON parsing error:', err.message);
+    return res.status(400).send({ error: 'invalid json' });
+  }
+  return res.status(500).send({ error: err.message || 'Internal Server Error' });
+});
 
 app.listen(port, () => {
   console.log(`\nAI agent service (${AI_AGENT_NAME}) listening at http://localhost:${port}\n`);

@@ -5,11 +5,12 @@ import { tickerMappingData } from '../mock-data/index.js';
 
 export const getTrades = async ({ companyName }: { companyName: string }): Promise</* TODO - Use proper type here */any> => {
   // Create the FDC3 resource to be returned to the client (this is the only part specific to MCP-FDC3)
-  const sanitizedCompanyName = companyName.replace(/[^a-zA-Z0-9-]/g, '').toLowerCase();
-  // In the real world, at this point we would reach out to a separate service built to lookup appropriate identifiers from a company name
-  // For now, let's just use a very crude mapping of company names and ticker symbols
-  const company = tickerMappingData.find((c: any) => c.name.toLowerCase().includes(sanitizedCompanyName));
-  console.log(`companyName: ${companyName}; sanitizedCompanyName: ${sanitizedCompanyName}; company.name: ${company?.name}; company.ticker: ${company?.ticker}`);
+  const sanitized = companyName.trim().toLowerCase();
+  const company = tickerMappingData.find((c: any) =>
+    c.name.toLowerCase().includes(sanitized) ||
+    c.ticker.toLowerCase() === sanitized
+  );
+  console.log(`[getTrades] input: "${companyName}" → company: ${company?.name} (${company?.ticker})`);
   if (company) {
 
     const targetApp: AppIdentifier = {

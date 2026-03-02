@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>News Feed — MCP-FDC3 Demo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0d1117;
+            color: #e6edf3;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            height: 52px;
+            background: #161b22;
+            border-bottom: 1px solid #30363d;
+            flex-shrink: 0
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px
+        }
+
+        .app-badge {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            background: rgba(210, 153, 34, .12);
+            border: 1px solid rgba(210, 153, 34, .3);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #d29922
+        }
+
+        .fdc3-tag {
+            font-size: 11px;
+            font-weight: 600;
+            color: #7d8590;
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            padding: 2px 7px
+        }
+
+        .live-dot {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            color: #3fb950;
+            font-weight: 500
+        }
+
+        .live-dot::before {
+            content: '';
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #3fb950;
+            animation: pulse 2s infinite
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 2px rgba(63, 185, 80, .25)
+            }
+
+            50% {
+                box-shadow: 0 0 0 5px rgba(63, 185, 80, .1)
+            }
+        }
+
+        .fdc3-banner {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            padding: 7px 20px;
+            background: rgba(88, 166, 255, .1);
+            border-bottom: 1px solid rgba(88, 166, 255, .25);
+            font-size: 12px;
+            color: #58a6ff;
+            flex-shrink: 0
+        }
+
+        .fdc3-banner.visible {
+            display: flex;
+            animation: bannerIn .3s ease
+        }
+
+        @keyframes bannerIn {
+            from {
+                opacity: 0;
+                transform: translateY(-6px)
+            }
+
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+
+        .fdc3-banner-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600
+        }
+
+        .fdc3-banner-label::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #58a6ff;
+            animation: pulse 1.5s infinite
+        }
+
+        .fdc3-clear-btn {
+            background: transparent;
+            border: 1px solid rgba(88, 166, 255, .3);
+            border-radius: 5px;
+            color: #58a6ff;
+            font-size: 11px;
+            padding: 2px 8px;
+            cursor: pointer
+        }
+
+        .fdc3-clear-btn:hover {
+            background: rgba(88, 166, 255, .1)
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: #161b22;
+            border-bottom: 1px solid #21262d;
+            flex-shrink: 0;
+            overflow-x: auto
+        }
+
+        .filter-btn {
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            color: #c9d1d9;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 5px 12px;
+            cursor: pointer;
+            transition: all .15s;
+            white-space: nowrap
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: #2d333b;
+            border-color: #d29922;
+            color: #d29922
+        }
+
+        .feed {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            scrollbar-width: thin;
+            scrollbar-color: #30363d transparent
+        }
+
+        .feed::-webkit-scrollbar {
+            width: 6px
+        }
+
+        .feed::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 3px
+        }
+
+        .card {
+            background: #161b22;
+            border: 1px solid #21262d;
+            border-radius: 10px;
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: all .15s;
+            position: relative;
+            overflow: hidden
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--accent, #30363d);
+            border-radius: 3px 0 0 3px
+        }
+
+        .card:hover {
+            background: #1c2128
+        }
+
+        .card.fdc3-highlight {
+            border-color: rgba(88, 166, 255, .4) !important;
+            background: rgba(88, 166, 255, .06) !important;
+            animation: cardFlash .5s ease
+        }
+
+        .card.dimmed {
+            opacity: .3
+        }
+
+        @keyframes cardFlash {
+            0% {
+                background: rgba(88, 166, 255, .2)
+            }
+
+            100% {
+                background: rgba(88, 166, 255, .06)
+            }
+        }
+
+        .card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 6px
+        }
+
+        .headline {
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.4;
+            color: #e6edf3;
+            flex: 1
+        }
+
+        .time-ago {
+            font-size: 11px;
+            color: #7d8590;
+            white-space: nowrap;
+            flex-shrink: 0;
+            margin-top: 1px
+        }
+
+        .card-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap
+        }
+
+        .source {
+            font-size: 11px;
+            color: #7d8590
+        }
+
+        .ticker-tag {
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(88, 166, 255, .1);
+            color: #58a6ff;
+            border: 1px solid rgba(88, 166, 255, .2);
+            border-radius: 4px;
+            padding: 1px 6px
+        }
+
+        .sentiment {
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 4px;
+            padding: 1px 7px
+        }
+
+        .pos-sent {
+            background: rgba(63, 185, 80, .12);
+            color: #3fb950;
+            border: 1px solid rgba(63, 185, 80, .25)
+        }
+
+        .neg-sent {
+            background: rgba(248, 81, 73, .12);
+            color: #f85149;
+            border: 1px solid rgba(248, 81, 73, .25)
+        }
+
+        .neu-sent {
+            background: rgba(139, 148, 158, .12);
+            color: #8b949e;
+            border: 1px solid rgba(139, 148, 158, .25)
+        }
+
+        footer {
+            background: #161b22;
+            border-top: 1px solid #21262d;
+            padding: 8px 20px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #7d8590
+        }
+
+        footer span {
+            color: #c9d1d9;
+            font-weight: 500
+        }
+    </style>
+</head>
+
+<body>
+    <div class="fdc3-banner" id="fdc3-banner">
+        <span class="fdc3-banner-label" id="fdc3-banner-label">FDC3 context received</span>
+        <button class="fdc3-clear-btn" onclick="clearFdc3Filter()">✕ Clear filter</button>
+    </div>
+    <div class="toolbar">
+        <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+        <button class="filter-btn" onclick="setFilter('earnings',this)">Earnings</button>
+        <button class="filter-btn" onclick="setFilter('macro',this)">Macro</button>
+        <button class="filter-btn" onclick="setFilter('tech',this)">Tech</button>
+        <button class="filter-btn" onclick="setFilter('rates',this)">Rates</button>
+        <button class="filter-btn" onclick="setFilter('positive',this)">📈 Bullish</button>
+        <button class="filter-btn" onclick="setFilter('negative',this)">📉 Bearish</button>
+    </div>
+    <div class="feed" id="feed"></div>
+    <footer>
+        <div>Showing <span id="showing">—</span> articles · Updated <span id="last-upd">—</span></div>
+        <div>Powered by MCP-FDC3</div>
+    </footer>
+    <script>
+        const ARTICLES = [
+            { id: 1, headline: 'Apple Reports Record Q1 Revenue of $124.3B, EPS Beats Estimates by $0.12', ticker: 'AAPL', source: 'Bloomberg', sentiment: 'positive', topic: 'earnings', mins: 2 },
+            { id: 2, headline: 'Fed Signals Pause in Rate Hikes as Inflation Cools to 2.8%', ticker: null, source: 'Reuters', sentiment: 'positive', topic: 'rates', mins: 5 },
+            { id: 3, headline: 'NVIDIA Stock Surges 8% Premarket After Blowout Data Center Revenue Hits $18.4B', ticker: 'NVDA', source: 'CNBC', sentiment: 'positive', topic: 'tech', mins: 8 },
+            { id: 4, headline: 'Tesla Q4 Deliveries Miss Estimates by 4%; Margin Compression Concerns Weigh on Stock', ticker: 'TSLA', source: 'WSJ', sentiment: 'negative', topic: 'earnings', mins: 11 },
+            { id: 5, headline: 'Microsoft Azure Revenue Growth Accelerates to 31% YoY on AI Demand Surge', ticker: 'MSFT', source: 'Bloomberg', sentiment: 'positive', topic: 'tech', mins: 14 },
+            { id: 6, headline: 'US Consumer Confidence Falls to 7-Month Low Amid Tariff Uncertainty', ticker: null, source: 'AP', sentiment: 'negative', topic: 'macro', mins: 18 },
+            { id: 7, headline: 'Amazon Web Services Wins Pentagon Contract Worth $2.1B Over 3 Years', ticker: 'AMZN', source: 'FT', sentiment: 'positive', topic: 'tech', mins: 22 },
+            { id: 8, headline: '10Y Treasury Yield Drops to 4.12% as Investors Rotate Into Safe-Haven Assets', ticker: null, source: 'Reuters', sentiment: 'neutral', topic: 'rates', mins: 25 },
+            { id: 9, headline: 'Goldman Sachs Upgrades S&P 500 Target to 5,800; Cites Strong Earnings Momentum', ticker: 'GS', source: 'Bloomberg', sentiment: 'positive', topic: 'macro', mins: 29 },
+            { id: 10, headline: 'Meta AI Assistants Now Active on 500M Devices; Zuckerberg Eyes $100B AI Investment', ticker: 'META', source: 'CNBC', sentiment: 'positive', topic: 'tech', mins: 33 },
+            { id: 11, headline: 'JPMorgan Warns of Credit Deterioration in Commercial Real Estate Loan Book', ticker: 'JPM', source: 'WSJ', sentiment: 'negative', topic: 'earnings', mins: 37 },
+            { id: 12, headline: 'Alphabet Faces New EU Antitrust Probe Into Search Advertising Practices', ticker: 'GOOGL', source: 'FT', sentiment: 'negative', topic: 'tech', mins: 41 },
+            { id: 13, headline: 'S&P 500 Hits Intraday Record, Biotech Sector Leads With 2.3% Gain', ticker: null, source: 'Bloomberg', sentiment: 'positive', topic: 'macro', mins: 45 },
+            { id: 14, headline: 'Netflix Adds 9.3M Subscribers in Q4, Ad-Tier Now Represents 40% of New Sign-Ups', ticker: 'NFLX', source: 'Reuters', sentiment: 'positive', topic: 'earnings', mins: 50 },
+            { id: 15, headline: 'Coinbase Revenue Jumps 140% YoY as Crypto Markets Rally on ETF Optimism', ticker: 'COIN', source: 'CNBC', sentiment: 'positive', topic: 'tech', mins: 55 },
+            { id: 16, headline: 'Eli Lilly Raises FY Guidance After Mounjaro Sales Exceed $5B Quarterly Run Rate', ticker: 'LLY', source: 'Bloomberg', sentiment: 'positive', topic: 'earnings', mins: 61 },
+            { id: 17, headline: 'China Imposes New Export Controls on Rare Earth; AMD, NVDA Shares Slip', ticker: 'AMD', source: 'FT', sentiment: 'negative', topic: 'macro', mins: 68 },
+            { id: 18, headline: 'Visa Transaction Volume Grows 9% as International Travel Spending Rebounds', ticker: 'V', source: 'WSJ', sentiment: 'positive', topic: 'earnings', mins: 74 },
+            { id: 19, headline: 'ECB President Lagarde Hints at June Rate Cut, EUR/USD Slips Below 1.09', ticker: 'EUR/USD', source: 'Bloomberg', sentiment: 'negative', topic: 'rates', mins: 81 },
+            { id: 20, headline: 'Bank of Japan Exits Negative Interest Rates, Ends Yield Curve Control; USD/JPY Surges to 150', ticker: 'USD/JPY', source: 'Reuters', sentiment: 'positive', topic: 'macro', mins: 94 },
+            { id: 21, headline: 'UK Core Inflation Sticks at 4.5%, GBP/USD Rallies on Delayed BoE Cut Hopes', ticker: 'GBP/USD', source: 'FT', sentiment: 'positive', topic: 'rates', mins: 112 },
+        ];
+        const ACCENT = { positive: '#3fb950', negative: '#f85149', neutral: '#8b949e' };
+        const SENT_CLASS = { positive: 'pos-sent', negative: 'neg-sent', neutral: 'neu-sent' };
+        const SENT_LABEL = { positive: 'Bullish', negative: 'Bearish', neutral: 'Neutral' };
+        let activeFilter = 'all';
+        let fdc3Ticker = null;
+
+        function timeStr(m) {
+            if (m < 60) return m + 'm ago';
+            const h = Math.floor(m / 60), r = m % 60;
+            return r ? `${h}h ${r}m ago` : `${h}h ago`;
+        }
+        function setFilter(f, btn) { activeFilter = f; document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); render(); }
+        function clearFdc3Filter() { fdc3Ticker = null; document.getElementById('fdc3-banner').classList.remove('visible'); render(); }
+        function render() {
+            const articles = ARTICLES.filter(a => {
+                if (activeFilter === 'all') return true;
+                if (activeFilter === 'positive') return a.sentiment === 'positive';
+                if (activeFilter === 'negative') return a.sentiment === 'negative';
+                return a.topic === activeFilter;
+            });
+            const feed = document.getElementById('feed');
+            feed.innerHTML = articles.map(a => {
+                const isMatch = fdc3Ticker && a.ticker && a.ticker.toUpperCase() === fdc3Ticker;
+                const isDimmed = fdc3Ticker && !isMatch;
+                const extra = isMatch ? ' fdc3-highlight' : isDimmed ? ' dimmed' : '';
+                return `<div class="card${extra}" id="card-${a.id}" style="--accent:${ACCENT[a.sentiment]}" onclick="window.parent.postMessage({source:'mcp-fdc3-app',type:'navigateAndRaiseIntent',targetTab:'blotter',intent:'ViewInstrument',context:{type:'fdc3.instrument',name:'${a.ticker || ''}',id:{ticker:'${a.ticker || ''}'}}},'*')">
+      <div class="card-top"><div class="headline">${a.headline}</div><div class="time-ago">${timeStr(a.mins)}</div></div>
+      <div class="card-meta">
+        <span class="source">${a.source}</span>
+        ${a.ticker ? `<span class="ticker-tag">${a.ticker}</span>` : ''}
+        <span class="sentiment ${SENT_CLASS[a.sentiment]}">${SENT_LABEL[a.sentiment]}</span>
+      </div>
+    </div>`;
+            }).join('');
+            document.getElementById('showing').textContent = articles.length;
+            document.getElementById('last-upd').textContent = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        window.addEventListener('message', event => {
+            const msg = event.data;
+            if (!msg || msg.source !== 'mcp-fdc3-platform') return;
+            console.log('%c[News] FDC3 message', 'color:#d29922;font-weight:bold;', msg);
+            if (msg.type === 'raiseIntent') {
+                const ctx = msg.context;
+                let ticker = ctx?.id?.ticker || ctx?.ticker || ctx?.symbol || ctx?.instruments?.[0]?.id?.ticker || null;
+                if (ticker) {
+                    fdc3Ticker = ticker.toUpperCase();
+                    document.getElementById('fdc3-banner-label').textContent = `🔵 FDC3 ${msg.intent || 'context'} — showing news for ${fdc3Ticker}`;
+                    document.getElementById('fdc3-banner').classList.add('visible');
+                    render();
+                    setTimeout(() => { const el = document.querySelector('.card.fdc3-highlight'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
+                }
+            }
+            if (msg.intent === 'ClearFilter') { clearFdc3Filter(); }
+        });
+
+        setInterval(() => { ARTICLES.forEach(a => a.mins++); render(); }, 60000);
+        render();
+    </script>
+</body>
+
+</html>

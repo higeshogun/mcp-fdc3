@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trade Blotter — MCP-FDC3 Demo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 52px;
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      flex-shrink: 0
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .app-badge {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(88, 166, 255, .12);
+      border: 1px solid rgba(88, 166, 255, .3);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #58a6ff
+    }
+
+    .fdc3-tag {
+      font-size: 11px;
+      font-weight: 600;
+      color: #7d8590;
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 4px;
+      padding: 2px 7px
+    }
+
+    .header-stats {
+      display: flex;
+      gap: 20px
+    }
+
+    .stat {
+      text-align: right
+    }
+
+    .stat-label {
+      font-size: 10px;
+      color: #7d8590;
+      text-transform: uppercase;
+      letter-spacing: .06em
+    }
+
+    .stat-value {
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 1px
+    }
+
+    .stat-value.pos {
+      color: #3fb950
+    }
+
+    .stat-value.neg {
+      color: #f85149
+    }
+
+    .fdc3-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 20px;
+      background: rgba(88, 166, 255, .1);
+      border-bottom: 1px solid rgba(88, 166, 255, .25);
+      font-size: 12px;
+      color: #58a6ff;
+      flex-shrink: 0
+    }
+
+    .fdc3-banner.visible {
+      display: flex;
+      animation: bannerIn .3s ease
+    }
+
+    @keyframes bannerIn {
+      from {
+        opacity: 0;
+        transform: translateY(-6px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    .fdc3-banner-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600
+    }
+
+    .fdc3-banner-label::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #58a6ff;
+      animation: pulse 1.5s infinite
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 2px rgba(88, 166, 255, .25)
+      }
+
+      50% {
+        box-shadow: 0 0 0 6px rgba(88, 166, 255, .1)
+      }
+    }
+
+    .fdc3-clear-btn {
+      background: transparent;
+      border: 1px solid rgba(88, 166, 255, .3);
+      border-radius: 5px;
+      color: #58a6ff;
+      font-size: 11px;
+      padding: 2px 8px;
+      cursor: pointer
+    }
+
+    .fdc3-clear-btn:hover {
+      background: rgba(88, 166, 255, .1)
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      background: #161b22;
+      border-bottom: 1px solid #21262d;
+      flex-shrink: 0;
+      gap: 12px
+    }
+
+    .toolbar-left {
+      display: flex;
+      gap: 8px
+    }
+
+    .filter-btn {
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      color: #c9d1d9;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 5px 12px;
+      cursor: pointer;
+      transition: all .15s
+    }
+
+    .filter-btn:hover,
+    .filter-btn.active {
+      background: #2d333b;
+      border-color: #58a6ff;
+      color: #58a6ff
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 5px 10px;
+      min-width: 200px
+    }
+
+    .search-box svg {
+      width: 14px;
+      height: 14px;
+      fill: #7d8590;
+      flex-shrink: 0
+    }
+
+    .search-box input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #c9d1d9;
+      font-size: 12px;
+      font-family: inherit;
+      width: 100%
+    }
+
+    .search-box input::placeholder {
+      color: #484f58
+    }
+
+    .table-wrap {
+      flex: 1;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #30363d transparent
+    }
+
+    .table-wrap::-webkit-scrollbar {
+      width: 6px
+    }
+
+    .table-wrap::-webkit-scrollbar-thumb {
+      background: #30363d;
+      border-radius: 3px
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse
+    }
+
+    thead tr {
+      background: #161b22;
+      position: sticky;
+      top: 0;
+      z-index: 2
+    }
+
+    th {
+      padding: 9px 14px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: #7d8590;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      border-bottom: 1px solid #21262d;
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap
+    }
+
+    th:hover {
+      color: #e6edf3
+    }
+
+    th.sorted {
+      color: #58a6ff
+    }
+
+    tbody tr {
+      border-bottom: 1px solid #161b22;
+      transition: background .1s;
+      cursor: pointer
+    }
+
+    tbody tr:hover {
+      background: rgba(88, 166, 255, .04)
+    }
+
+    tbody tr:hover .row-actions {
+      opacity: 1
+    }
+
+    tbody tr.selected {
+      background: rgba(88, 166, 255, .08)
+    }
+
+    tbody tr.fdc3-highlight {
+      background: rgba(88, 166, 255, .13) !important;
+      border-left: 3px solid #58a6ff;
+      animation: rowFlash .5s ease
+    }
+
+    @keyframes rowFlash {
+      0% {
+        background: rgba(88, 166, 255, .35)
+      }
+
+      100% {
+        background: rgba(88, 166, 255, .13)
+      }
+    }
+
+    td {
+      padding: 9px 14px;
+      font-size: 13px;
+      white-space: nowrap
+    }
+
+    .ticker {
+      font-weight: 700;
+      color: #58a6ff
+    }
+
+    .company {
+      font-size: 11px;
+      color: #7d8590;
+      margin-top: 1px
+    }
+
+    .side-buy {
+      color: #3fb950;
+      font-weight: 600
+    }
+
+    .side-sell {
+      color: #f85149;
+      font-weight: 600
+    }
+
+    .badge {
+      display: inline-block;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .02em
+    }
+
+    .badge-filled {
+      background: rgba(63, 185, 80, .15);
+      color: #3fb950;
+      border: 1px solid rgba(63, 185, 80, .3)
+    }
+
+    .badge-partial {
+      background: rgba(210, 153, 34, .15);
+      color: #d29922;
+      border: 1px solid rgba(210, 153, 34, .3)
+    }
+
+    .badge-pending {
+      background: rgba(88, 166, 255, .12);
+      color: #58a6ff;
+      border: 1px solid rgba(88, 166, 255, .3)
+    }
+
+    .badge-cancelled {
+      background: rgba(139, 148, 158, .12);
+      color: #8b949e;
+      border: 1px solid rgba(139, 148, 158, .3)
+    }
+
+    .pnl-pos {
+      color: #3fb950;
+      font-weight: 500
+    }
+
+    .pnl-neg {
+      color: #f85149;
+      font-weight: 500
+    }
+
+    .pnl-zero {
+      color: #7d8590
+    }
+
+    /* ── Row action buttons ────────────────────── */
+    .row-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      opacity: 0;
+      transition: opacity .15s;
+    }
+
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 5px;
+      color: #c9d1d9;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all .15s;
+      font-family: inherit;
+    }
+
+    .action-btn:hover {
+      background: #2d333b;
+      border-color: #58a6ff;
+      color: #58a6ff
+    }
+
+    .action-btn.news:hover {
+      border-color: #d29922;
+      color: #d29922
+    }
+
+    .action-btn.watchlist:hover {
+      border-color: #3fb950;
+      color: #3fb950
+    }
+
+    footer {
+      background: #161b22;
+      border-top: 1px solid #21262d;
+      padding: 8px 20px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between
+    }
+
+    .footer-info {
+      font-size: 11px;
+      color: #7d8590
+    }
+
+    .footer-info span {
+      color: #c9d1d9;
+      font-weight: 500
+    }
+
+    .live-dot {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: #3fb950
+    }
+
+    .live-dot::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #3fb950;
+      box-shadow: 0 0 0 2px rgba(63, 185, 80, .25);
+      animation: livePulse 2s infinite
+    }
+
+    @keyframes livePulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 2px rgba(63, 185, 80, .25)
+      }
+
+      50% {
+        box-shadow: 0 0 0 5px rgba(63, 185, 80, .1)
+      }
+    }
+
+    /* ── Toast notification ───────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 52px;
+      right: 16px;
+      background: #1c2128;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 12px;
+      color: #c9d1d9;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity .25s, transform .25s;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: none
+    }
+
+    .toast-icon {
+      font-size: 14px
+    }
+  </style>
+</head>
+
+<body>
+  <div class="fdc3-banner" id="fdc3-banner">
+    <span class="fdc3-banner-label" id="fdc3-banner-label">FDC3 context received</span>
+    <button class="fdc3-clear-btn" onclick="clearFdc3Filter()">✕ Clear filter</button>
+  </div>
+
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+      <button class="filter-btn" onclick="setFilter('buy',this)">Buy</button>
+      <button class="filter-btn" onclick="setFilter('sell',this)">Sell</button>
+    </div>
+    <div class="search-box">
+      <svg viewBox="0 0 16 16">
+        <path
+          d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.156a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z" />
+      </svg>
+      <input type="text" id="search" placeholder="Search ticker or company…" oninput="renderTable()" />
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th onclick="sortBy('time')">Exec Time</th>
+          <th onclick="sortBy('tradeId')">Trade ID</th>
+          <th onclick="sortBy('orderId')">Order ID</th>
+          <th onclick="sortBy('ticker')">Instrument</th>
+          <th onclick="sortBy('side')">Side</th>
+          <th onclick="sortBy('qty')">Qty</th>
+          <th onclick="sortBy('price')">Price</th>
+          <th onclick="sortBy('venue')">Venue</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <footer>
+    <div class="footer-info">Showing <span id="showing">—</span> of <span id="total">—</span> trades · Updated <span
+        id="last-updated">—</span></div>
+    <div class="live-dot">Live</div>
+  </footer>
+
+  <div class="toast" id="toast">
+    <span class="toast-icon" id="toast-icon">🔵</span>
+    <span id="toast-msg">FDC3 action sent</span>
+  </div>
+
+  <script>
+    const getMockDate = () => new Date().toISOString().split('T')[0];
+    const mockDate = getMockDate();
+
+    const TRADES = [
+      { tradeId: 'X9412', orderId: 'O001', time: `${mockDate} 09:31:05`, ticker: 'AAPL', company: 'Apple Inc.', side: 'BUY', qty: 500, price: 189.34, venue: 'NASDAQ' },
+      { tradeId: 'X9413', orderId: 'O002', time: `${mockDate} 09:32:12`, ticker: 'MSFT', company: 'Microsoft Corp.', side: 'BUY', qty: 200, price: 418.92, venue: 'EDGX' },
+      { tradeId: 'X9414', orderId: 'O003', time: `${mockDate} 09:33:46`, ticker: 'TSLA', company: 'Tesla Inc.', side: 'SELL', qty: 150, price: 248.60, venue: 'NASDAQ' },
+      { tradeId: 'X9415', orderId: 'O004', time: `${mockDate} 09:35:23`, ticker: 'NVDA', company: 'NVIDIA Corp.', side: 'BUY', qty: 80, price: 875.40, venue: 'ARCA' },
+      // AMZN Order O005 was PARTIAL - 60 shares ordered, 40 filled here
+      { tradeId: 'X9416', orderId: 'O005', time: `${mockDate} 09:37:10`, ticker: 'AMZN', company: 'Amazon.com Inc.', side: 'BUY', qty: 40, price: 193.18, venue: 'BATS' },
+      { tradeId: 'X9417', orderId: 'O006', time: `${mockDate} 09:38:51`, ticker: 'GOOGL', company: 'Alphabet Inc.', side: 'SELL', qty: 40, price: 172.15, venue: 'NASDAQ' },
+      { tradeId: 'X9418', orderId: 'O007', time: `${mockDate} 09:39:35`, ticker: 'META', company: 'Meta Platforms Inc.', side: 'BUY', qty: 120, price: 583.70, venue: 'EDGX' },
+      // JPM Order O008 was 300 shares, filled in two prints
+      { tradeId: 'X9419', orderId: 'O008', time: `${mockDate} 09:41:18`, ticker: 'JPM', company: 'JPMorgan Chase & Co.', side: 'SELL', qty: 200, price: 212.80, venue: 'NYSE' },
+      { tradeId: 'X9420', orderId: 'O008', time: `${mockDate} 09:41:19`, ticker: 'JPM', company: 'JPMorgan Chase & Co.', side: 'SELL', qty: 100, price: 212.78, venue: 'ARCA' },
+      { tradeId: 'X9421', orderId: 'O010', time: `${mockDate} 09:44:31`, ticker: 'NFLX', company: 'Netflix Inc.', side: 'SELL', qty: 90, price: 698.20, venue: 'NASDAQ' },
+      { tradeId: 'X9422', orderId: 'O013', time: `${mockDate} 09:48:56`, ticker: 'LLY', company: 'Eli Lilly & Co.', side: 'BUY', qty: 25, price: 867.50, venue: 'BATS' },
+      { tradeId: 'X9423', orderId: 'O014', time: `${mockDate} 09:50:12`, ticker: 'V', company: 'Visa Inc.', side: 'BUY', qty: 180, price: 283.40, venue: 'NYSE' },
+      // SPY Order O015 was PARTIAL - 1000 ordered, 400 + 350 filled so far
+      { tradeId: 'X9424', orderId: 'O015', time: `${mockDate} 09:52:39`, ticker: 'SPY', company: 'SPDR S&P 500 ETF', side: 'BUY', qty: 400, price: 521.80, venue: 'ARCA' },
+      { tradeId: 'X9425', orderId: 'O015', time: `${mockDate} 09:52:41`, ticker: 'SPY', company: 'SPDR S&P 500 ETF', side: 'BUY', qty: 350, price: 521.81, venue: 'EDGX' },
+      { tradeId: 'X9426', orderId: 'O016', time: `${mockDate} 09:53:45`, ticker: 'QQQ', company: 'Invesco QQQ Trust', side: 'SELL', qty: 500, price: 448.20, venue: 'NASDAQ' },
+      { tradeId: 'X9427', orderId: 'O017', time: `${mockDate} 09:55:01`, ticker: 'AMD', company: 'Advanced Micro Devices', side: 'BUY', qty: 400, price: 178.90, venue: 'BATS' },
+    ];
+
+    let currentFilter = 'all', sortCol = 'time', sortDir = -1, selectedId = null, fdc3Ticker = null;
+    let toastTimer = null;
+
+    function setFilter(f, btn) {
+      currentFilter = f;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active'); renderTable();
+    }
+    function sortBy(col) {
+      if (sortCol === col) sortDir *= -1; else { sortCol = col; sortDir = 1; }
+      renderTable();
+    }
+    function filtered() {
+      const q = document.getElementById('search').value.toLowerCase();
+      return TRADES.filter(t => {
+        const matchFdc3 = !fdc3Ticker || t.ticker.toUpperCase() === fdc3Ticker;
+        const matchFilter = currentFilter === 'all' || (currentFilter === 'buy' && t.side === 'BUY') || (currentFilter === 'sell' && t.side === 'SELL');
+        const matchSearch = !q || t.ticker.toLowerCase().includes(q) || t.company.toLowerCase().includes(q) || t.orderId.toLowerCase().includes(q) || t.tradeId.toLowerCase().includes(q);
+        return matchFdc3 && matchFilter && matchSearch;
+      }).sort((a, b) => {
+        let av = a[sortCol], bv = b[sortCol];
+        return typeof av === 'string' ? av.localeCompare(bv) * sortDir : (av - bv) * sortDir;
+      });
+    }
+    function fmt(n) {
+      if (Math.abs(n) >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+      if (Math.abs(n) >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+      return n.toFixed(2);
+    }
+
+    // ── FDC3 action: postMessage to parent platform ────────────────────────
+    function sendFdc3Action(ticker, company, targetTab) {
+      const context = {
+        type: 'fdc3.instrument',
+        name: company,
+        id: { ticker }
+      };
+      window.parent.postMessage({
+        source: 'mcp-fdc3-app',
+        type: 'navigateAndRaiseIntent',
+        targetTab,               // 'news' | 'watchlist'
+        intent: 'ViewInstrument',
+        context,
+      }, '*');
+      showToast(targetTab, ticker);
+    }
+
+    function showToast(targetTab, ticker) {
+      const icons = { news: '📰', watchlist: '📊' };
+      const labels = { news: 'News Feed', watchlist: 'Watchlist' };
+      document.getElementById('toast-icon').textContent = icons[targetTab] || '🔵';
+      document.getElementById('toast-msg').textContent = `FDC3 → ${labels[targetTab] || targetTab}: ${ticker}`;
+      const el = document.getElementById('toast');
+      el.classList.add('show');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+    }
+
+    function renderTable() {
+      const rows = filtered();
+      const tbody = document.getElementById('tbody');
+      tbody.innerHTML = rows.map(t => {
+        const pnlClass = t.pnl > 0 ? 'pnl-pos' : t.pnl < 0 ? 'pnl-neg' : 'pnl-zero';
+        const pnlStr = t.pnl > 0 ? `+$${fmt(t.pnl)}` : t.pnl < 0 ? `-$${fmt(Math.abs(t.pnl))}` : '—';
+        const statusBadge = { FILLED: 'badge-filled', PARTIAL: 'badge-partial', PENDING: 'badge-pending', CANCELLED: 'badge-cancelled' }[t.status];
+        const isFdc3 = fdc3Ticker && t.ticker.toUpperCase() === fdc3Ticker;
+        const sel = t.tradeId === selectedId ? ' selected' : '';
+        const highlight = isFdc3 ? ' fdc3-highlight' : '';
+        return `<tr class="${sel}${highlight}" onclick="selectRow('${t.tradeId}')">
+        <td style="color:#8b949e;font-size:12px;font-variant-numeric:tabular-nums">${t.time}</td>
+        <td style="font-family:monospace;color:#c9d1d9">${t.tradeId}</td>
+        <td style="font-family:monospace;color:#7d8590">${t.orderId}</td>
+        <td><div class="ticker">${t.ticker}</div><div class="company">${t.company}</div></td>
+        <td class="side-${t.side.toLowerCase()}">${t.side}</td>
+        <td style="font-variant-numeric:tabular-nums">${t.qty.toLocaleString()}</td>
+        <td style="font-variant-numeric:tabular-nums">$${t.price.toFixed(2)}</td>
+        <td style="color:#8b949e;font-size:12px">${t.venue}</td>
+        <td>
+          <div class="row-actions">
+            <button class="action-btn news" onclick="event.stopPropagation();sendFdc3Action('${t.ticker}','${t.company.replace(/'/g, "\\'")}','news')" title="View news for ${t.ticker}">📰 News</button>
+            <button class="action-btn watchlist" onclick="event.stopPropagation();sendFdc3Action('${t.ticker}','${t.company.replace(/'/g, "\\'")}','watchlist')" title="View ${t.ticker} on watchlist">📊 Watchlist</button>
+          </div>
+        </td>
+      </tr>`;
+      }).join('');
+      document.getElementById('showing').textContent = rows.length;
+      document.getElementById('total').textContent = TRADES.length;
+      const totalVol = TRADES.reduce((s, t) => s + (t.qty * t.price), 0);
+      document.getElementById('total-notional').textContent = '$' + fmt(totalVol);
+      document.getElementById('trade-count').textContent = TRADES.length;
+      const now = new Date();
+      document.getElementById('last-updated').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    function selectRow(id) { selectedId = id === selectedId ? null : id; renderTable(); }
+
+    function clearFdc3Filter() {
+      fdc3Ticker = null;
+      document.getElementById('fdc3-banner').classList.remove('visible');
+      renderTable();
+    }
+
+    // ── FDC3 inbound: respond to platform raiseIntent ──────────────────────
+    window.addEventListener('message', event => {
+      const msg = event.data;
+      if (!msg || msg.source !== 'mcp-fdc3-platform') return;
+      console.log('%c[Trade Blotter] FDC3 message', 'color:#8a2be2;font-weight:bold;', msg);
+      if (msg.type === 'raiseIntent') {
+        const ctx = msg.context;
+        let ticker = ctx?.id?.ticker || ctx?.ticker || ctx?.symbol || ctx?.instruments?.[0]?.id?.ticker || null;
+        if (ticker) {
+          fdc3Ticker = ticker.toUpperCase();
+          document.getElementById('fdc3-banner-label').textContent = `🔵 FDC3 ${msg.intent || 'context'} — filtered to ${fdc3Ticker}`;
+          document.getElementById('fdc3-banner').classList.add('visible');
+          renderTable();
+        }
+      }
+      if (msg.intent === 'RecordNewTrade' && msg.context?.details) {
+        const d = msg.context.details;
+        const newTrade = {
+          tradeId: 'X' + Math.floor(Math.random() * 10000).toString().padStart(4, '0'),
+          orderId: 'O' + Math.floor(Math.random() * 1000).toString().padStart(3, '0'),
+          time: d.time,
+          ticker: d.ticker,
+          company: d.ticker, // mockup
+          side: d.side,
+          qty: d.qty,
+          price: d.price,
+          venue: 'IEX'
+        };
+        TRADES.unshift(newTrade);
+        renderTable();
+        showToast('watchlist', 'New Trade: ' + d.ticker);
+      }
+      if (msg.intent === 'ClearFilter') { clearFdc3Filter(); }
+    });
+
+    renderTable();
+  </script>
+</body>
+
+</html>

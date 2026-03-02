@@ -31,6 +31,7 @@
 # All other services scale to zero when idle.
 # =============================================================================
 set -euo pipefail
+export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
 # ---------- Config ------------------------------------------------------------
 PROJECT_ID="${PROJECT_ID:-}"
@@ -165,7 +166,7 @@ gcloud run deploy mcp-fdc3-ai-agent \
   --memory=1Gi \
   --cpu=1 \
   --timeout=300 \
-  --startup-cpu-boost \
+  --cpu-boost \
   --set-env-vars="${AI_AGENT_ENV_VARS},BACKEND_MCP_SERVER_URL=${MCP_SERVER_URL}/mcp,FRONTEND_PLATFORM_ORIGIN=*" \
   --quiet
 

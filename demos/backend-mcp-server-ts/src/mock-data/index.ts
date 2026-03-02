@@ -1,1 +1,1 @@
-export { tickerMappingData } from './tickerMappingData';
+export { tickerMappingData, resolveTicker } from './tickerMappingData.js';

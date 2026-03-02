@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Order Ticket — MCP-FDC3 Demo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0d1117;
+            color: #e6edf3;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            height: 52px;
+            background: #161b22;
+            border-bottom: 1px solid #30363d;
+            flex-shrink: 0;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .app-badge {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            background: rgba(210, 153, 34, 0.12);
+            border: 1px solid rgba(210, 153, 34, 0.3);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #d29922;
+        }
+
+        .fdc3-tag {
+            font-size: 11px;
+            font-weight: 600;
+            color: #7d8590;
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            padding: 2px 7px;
+        }
+
+        .fdc3-banner {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            padding: 7px 20px;
+            background: rgba(88, 166, 255, 0.1);
+            border-bottom: 1px solid rgba(88, 166, 255, 0.25);
+            font-size: 12px;
+            color: #58a6ff;
+            flex-shrink: 0;
+        }
+
+        .fdc3-banner.visible {
+            display: flex;
+            animation: bannerIn 0.3s ease;
+        }
+
+        @keyframes bannerIn {
+            from {
+                opacity: 0;
+                transform: translateY(-6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .fdc3-banner-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .fdc3-banner-label::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #58a6ff;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.25);
+            }
+
+            50% {
+                box-shadow: 0 0 0 6px rgba(88, 166, 255, 0.1);
+            }
+        }
+
+        .ticket-wrap {
+            flex: 1;
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            overflow-y: auto;
+        }
+
+        .ticket-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .instrument-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .inst-search {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #58a6ff;
+            outline: none;
+            text-transform: uppercase;
+            width: 140px;
+            transition: border-color 0.2s;
+        }
+
+        .inst-search:focus {
+            border-color: #58a6ff;
+        }
+
+        .time-badge {
+            font-size: 11px;
+            color: #7d8590;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .time-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #3fb950;
+        }
+
+        .price-strip {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .price-box {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .price-box:hover {
+            background: #21262d;
+            border-color: #484f58;
+        }
+
+        .price-box.selected-buy {
+            border-color: #3fb950;
+            background: rgba(63, 185, 80, 0.08);
+        }
+
+        .price-box.selected-sell {
+            border-color: #f85149;
+            background: rgba(248, 81, 73, 0.08);
+        }
+
+        .price-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #7d8590;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .price-value {
+            font-size: 24px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .price-box.buy .price-label {
+            color: #3fb950;
+        }
+
+        .price-box.sell .price-label {
+            color: #f85149;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #7d8590;
+            margin-bottom: 6px;
+        }
+
+        .qty-input {
+            width: 100%;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 15px;
+            color: #e6edf3;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .qty-input:focus {
+            border-color: #58a6ff;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #fff;
+            transition: all 0.2s;
+            background: #21262d;
+            color: #7d8590;
+        }
+
+        .btn-submit.active-buy {
+            background: #238636;
+            color: #fff;
+        }
+
+        .btn-submit.active-buy:hover {
+            background: #2ea043;
+        }
+
+        .btn-submit.active-sell {
+            background: #da3633;
+            color: #fff;
+        }
+
+        .btn-submit.active-sell:hover {
+            background: #f85149;
+        }
+
+        .success-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(13, 17, 23, 0.9);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .success-overlay.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .check-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: #3fb950;
+        }
+
+        .success-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #e6edf3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="fdc3-banner" id="fdc3-banner">
+        <span class="fdc3-banner-label" id="fdc3-banner-label">FDC3 context received</span>
+    </div>
+
+    <div class="ticket-wrap">
+        <div class="ticket-card" style="position: relative;">
+            <div class="instrument-head">
+                <input type="text" id="ticker-input" class="inst-search" value="AAPL"
+                    oninput="changeTicker(this.value)" />
+                <div class="time-badge">Live Pricing</div>
+            </div>
+
+            <div class="price-strip">
+                <div class="price-box sell" id="box-sell" onclick="selectSide('SELL')">
+                    <div class="price-label">Sell</div>
+                    <div class="price-value" id="price-bid">189.32</div>
+                </div>
+                <div class="price-box buy" id="box-buy" onclick="selectSide('BUY')">
+                    <div class="price-label">Buy</div>
+                    <div class="price-value" id="price-ask">189.36</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Quantity</label>
+                <input type="number" id="qty-input" class="qty-input" value="100" />
+            </div>
+
+            <button class="btn-submit" id="btn-submit" onclick="submitOrder()">Select side to execute</button>
+
+            <div class="success-overlay" id="success-overlay">
+                <div class="check-icon">✓</div>
+                <div class="success-text">Order Submitted</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTicker = 'AAPL';
+        let basePrice = 189.34;
+        let selectedSide = null;
+        let priceInterval = null;
+
+        const MOCK_PRICES = {
+            'AAPL': 189.34, 'MSFT': 418.92, 'TSLA': 248.60, 'NVDA': 875.40,
+            'AMZN': 193.20, 'GOOGL': 172.15, 'META': 583.70, 'JPM': 212.80,
+            'GS': 498.60, 'NFLX': 698.20, 'EUR/USD': 1.0854, 'GBP/USD': 1.2580,
+            'USD/JPY': 150.32, 'SPY': 521.80, 'QQQ': 448.20
+        };
+
+        function startPricing() {
+            if (priceInterval) clearInterval(priceInterval);
+            priceInterval = setInterval(() => {
+                // Small random walk
+                const spread = currentTicker.includes('/') ? 0.0002 : 0.04;
+                basePrice = basePrice + (Math.random() - 0.48) * (spread * 5);
+                if (basePrice < 1) basePrice = Math.max(0.0001, basePrice);
+
+                const bid = basePrice - spread;
+                const ask = basePrice + spread;
+
+                const format = currentTicker.includes('/') ? 4 : 2;
+                document.getElementById('price-bid').textContent = bid.toFixed(format);
+                document.getElementById('price-ask').textContent = ask.toFixed(format);
+            }, 1000);
+        }
+
+        function changeTicker(val) {
+            currentTicker = val.toUpperCase();
+            basePrice = MOCK_PRICES[currentTicker] || 100.00;
+            startPricing();
+        }
+
+        function selectSide(side) {
+            selectedSide = side;
+            document.getElementById('box-buy').className = 'price-box buy' + (side === 'BUY' ? ' selected-buy' : '');
+            document.getElementById('box-sell').className = 'price-box sell' + (side === 'SELL' ? ' selected-sell' : '');
+
+            const btn = document.getElementById('btn-submit');
+            if (side === 'BUY') {
+                btn.className = 'btn-submit active-buy';
+                btn.textContent = 'Buy Market';
+            } else {
+                btn.className = 'btn-submit active-sell';
+                btn.textContent = 'Sell Market';
+            }
+        }
+
+        function submitOrder() {
+            if (!selectedSide) return;
+            const overlay = document.getElementById('success-overlay');
+
+            const qtyStr = document.getElementById('qty-input').value;
+            const qtyNum = parseInt(qtyStr) || 100;
+            const priceNum = selectedSide === 'BUY' ? parseFloat(document.getElementById('price-ask').textContent) : parseFloat(document.getElementById('price-bid').textContent);
+
+            const today = new Date();
+            const dateStr = today.toISOString().split('T')[0];
+            const timeStr = today.toLocaleTimeString('en-US', { hour12: false });
+
+            const details = {
+                ticker: currentTicker,
+                side: selectedSide,
+                qty: qtyNum,
+                price: priceNum,
+                time: `${dateStr} ${timeStr}`
+            };
+
+            window.parent.postMessage({
+                source: 'mcp-fdc3-app',
+                type: 'navigateAndRaiseIntent',
+                targetTab: 'orderBlotter',
+                intent: 'RecordNewOrder',
+                context: { type: 'fdc3.order', details }
+            }, '*');
+
+            window.parent.postMessage({
+                source: 'mcp-fdc3-app',
+                type: 'navigateAndRaiseIntent',
+                targetTab: 'tradeBlotter',
+                intent: 'RecordNewTrade',
+                context: { type: 'fdc3.trade', details }
+            }, '*');
+
+            overlay.classList.add('show');
+            setTimeout(() => {
+                overlay.classList.remove('show');
+                selectedSide = null;
+                document.getElementById('box-buy').className = 'price-box buy';
+                document.getElementById('box-sell').className = 'price-box sell';
+                document.getElementById('btn-submit').className = 'btn-submit';
+                document.getElementById('btn-submit').textContent = 'Select side to execute';
+            }, 1500);
+        }
+
+        // FDC3 Inbound message listener
+        window.addEventListener('message', event => {
+            const msg = event.data;
+            if (!msg || msg.source !== 'mcp-fdc3-platform') return;
+
+            console.log('%c[Order Ticket] FDC3 message', 'color:#d29922;font-weight:bold;', msg);
+
+            if (msg.type === 'raiseIntent') {
+                // AI explicit SubmitOrder intent handling
+                if (msg.intent === 'SubmitOrder' && msg.context?.type === 'fdc3.order') {
+                    const details = msg.context.details || {};
+                    if (details.ticker) {
+                        document.getElementById('ticker-input').value = details.ticker;
+                        changeTicker(details.ticker);
+                    }
+                    if (details.quantity) document.getElementById('qty-input').value = details.quantity;
+                    if (details.side) selectSide(details.side.toUpperCase());
+
+                    document.getElementById('fdc3-banner-label').textContent = `🔵 FDC3 SubmitOrder staged for ${details.ticker}`;
+                    const banner = document.getElementById('fdc3-banner');
+                    banner.classList.add('visible');
+                    setTimeout(() => banner.classList.remove('visible'), 4000);
+                }
+                // Generio ViewInstrument intent handling
+                else {
+                    const ctx = msg.context;
+                    let ticker = ctx?.id?.ticker || ctx?.ticker || ctx?.symbol || ctx?.instruments?.[0]?.id?.ticker || null;
+                    if (ticker) {
+                        ticker = ticker.toUpperCase();
+                        document.getElementById('ticker-input').value = ticker;
+                        changeTicker(ticker);
+
+                        document.getElementById('fdc3-banner-label').textContent = `🔵 FDC3 ${msg.intent || 'context'} — loaded ${ticker}`;
+                        const banner = document.getElementById('fdc3-banner');
+                        banner.classList.add('visible');
+                        setTimeout(() => banner.classList.remove('visible'), 4000);
+                    }
+                }
+            }
+        });
+
+        // Initialize
+        startPricing();
+    </script>
+</body>
+
+</html>

@@ -3,7 +3,8 @@ import type { StructuredMessage } from './types';
 export function getStructuredMessage(messages: any[]): StructuredMessage {
   // Extract resource artifact and final natural language answer from LangChain serialized messages
   const result: StructuredMessage = {};
-  for (const msg of messages) {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const msg = messages[i];
     const msgType = msg?.id?.[2];
     if (msgType === 'ToolMessage') {
       const artifacts = msg?.kwargs?.artifact;
@@ -16,8 +17,8 @@ export function getStructuredMessage(messages: any[]): StructuredMessage {
         }
       }
     }
-    if (result.mcpResource) {
-      break;
+    if (result.mcpResource || msgType === 'HumanMessage') {
+      break; // Found the current turn's resource, or hit the start of the current turn
     }
   }
   // Find last AIMessage with text content

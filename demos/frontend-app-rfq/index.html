@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RFQ Panel — MCP-FDC3 Demo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0d1117;
+            color: #e6edf3;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            height: 52px;
+            background: #161b22;
+            border-bottom: 1px solid #30363d;
+            flex-shrink: 0;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .app-badge {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            background: rgba(139, 148, 158, 0.12);
+            border: 1px solid rgba(139, 148, 158, 0.3);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #8b949e;
+        }
+
+        .fdc3-tag {
+            font-size: 11px;
+            font-weight: 600;
+            color: #7d8590;
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            padding: 2px 7px;
+        }
+
+        .fdc3-banner {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            padding: 7px 20px;
+            background: rgba(88, 166, 255, 0.1);
+            border-bottom: 1px solid rgba(88, 166, 255, 0.25);
+            font-size: 12px;
+            color: #58a6ff;
+            flex-shrink: 0;
+        }
+
+        .fdc3-banner.visible {
+            display: flex;
+            animation: bannerIn 0.3s ease;
+        }
+
+        @keyframes bannerIn {
+            from {
+                opacity: 0;
+                transform: translateY(-6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .fdc3-banner-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .fdc3-banner-label::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #58a6ff;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.25);
+            }
+
+            50% {
+                box-shadow: 0 0 0 6px rgba(88, 166, 255, 0.1);
+            }
+        }
+
+        .scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group.full {
+            grid-column: 1 / -1;
+        }
+
+        .label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #7d8590;
+            text-transform: uppercase;
+        }
+
+        .input {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 14px;
+            color: #e6edf3;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input:focus {
+            border-color: #58a6ff;
+        }
+
+        .side-toggle {
+            display: flex;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .side-btn {
+            flex: 1;
+            padding: 8px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+            color: #7d8590;
+            transition: all 0.2s;
+        }
+
+        .side-btn.active.buy {
+            background: rgba(63, 185, 80, 0.15);
+            color: #3fb950;
+        }
+
+        .side-btn.active.sell {
+            background: rgba(248, 81, 73, 0.15);
+            color: #f85149;
+        }
+
+        .side-btn.active.two-way {
+            background: rgba(88, 166, 255, 0.15);
+            color: #58a6ff;
+        }
+
+        .dealer-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .dealer-pill {
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 16px;
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #c9d1d9;
+            cursor: pointer;
+            transition: all 0.1s;
+            user-select: none;
+        }
+
+        .dealer-pill.selected {
+            background: #58a6ff;
+            border-color: #58a6ff;
+            color: #0d1117;
+            font-weight: 600;
+        }
+
+        .action-bar {
+            display: flex;
+            justify-content: flex-end;
+            padding-top: 20px;
+            border-top: 1px solid #30363d;
+            margin-top: 10px;
+        }
+
+        .btn-submit {
+            background: #58a6ff;
+            color: #0d1117;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: background 0.2s;
+        }
+
+        .btn-submit:hover {
+            background: #79c0ff;
+        }
+
+        .btn-submit:disabled {
+            background: #21262d;
+            color: #7d8590;
+            cursor: not-allowed;
+        }
+
+        /* Quote grid overlay */
+        .quotes-view {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .quotes-view.active {
+            display: flex;
+        }
+
+        .quote-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .quote-card:hover {
+            border-color: #58a6ff;
+        }
+
+        .dealer-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #e6edf3;
+        }
+
+        .dealer-status {
+            font-size: 11px;
+            color: #7d8590;
+            margin-top: 4px;
+        }
+
+        .quote-price {
+            font-size: 20px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .btn-accept {
+            background: #238636;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-accept:hover {
+            background: #2ea043;
+        }
+
+        .quote-timer {
+            height: 4px;
+            background: #30363d;
+            border-radius: 2px;
+            margin-top: 12px;
+            overflow: hidden;
+        }
+
+        .quote-timer-fill {
+            height: 100%;
+            background: #58a6ff;
+            width: 100%;
+            transition: width 1s linear;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="fdc3-banner" id="fdc3-banner">
+        <span class="fdc3-banner-label" id="fdc3-banner-label">FDC3 context received</span>
+    </div>
+
+    <div class="scroll-area">
+        <div class="form-grid" id="rfq-form">
+            <div class="form-group">
+                <span class="label">Instrument</span>
+                <input type="text" class="input" id="inst-input" value="EUR/USD" />
+            </div>
+            <div class="form-group">
+                <span class="label">Notional Amount</span>
+                <input type="text" class="input" id="qty-input" value="1,000,000" />
+            </div>
+            <div class="form-group">
+                <span class="label">Side</span>
+                <div class="side-toggle">
+                    <button class="side-btn buy" id="side-buy" onclick="setSide('buy')">Buy</button>
+                    <button class="side-btn two-way active two-way" id="side-two-way"
+                        onclick="setSide('two-way')">Two-Way</button>
+                    <button class="side-btn sell" id="side-sell" onclick="setSide('sell')">Sell</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <span class="label">Settle Date</span>
+                <input type="date" class="input" id="date-input" />
+            </div>
+            <div class="form-group full">
+                <span class="label">Select Dealers</span>
+                <div class="dealer-list">
+                    <div class="dealer-pill selected" onclick="toggleDealer(this)">JPMorgan</div>
+                    <div class="dealer-pill selected" onclick="toggleDealer(this)">Goldman Sachs</div>
+                    <div class="dealer-pill selected" onclick="toggleDealer(this)">Citi</div>
+                    <div class="dealer-pill" onclick="toggleDealer(this)">Barclays</div>
+                    <div class="dealer-pill" onclick="toggleDealer(this)">UBS</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-bar" id="action-bar">
+            <button class="btn-submit" id="btn-request" onclick="requestQuotes()">Request Quotes</button>
+        </div>
+
+        <!-- Active Quotes View -->
+        <div class="quotes-view" id="quotes-view">
+            <div
+                style="font-size: 13px; font-weight: 600; color: #7d8590; margin-bottom: 8px; display:flex; justify-content:space-between;">
+                <span>ACTIVE QUOTES (<span id="qv-inst">EUR/USD</span>)</span>
+                <button class="btn-cancel" onclick="cancelQuotes()"
+                    style="background:transparent; border:1px solid #7d8590; color:#7d8590; border-radius:4px; padding:2px 8px; font-size:11px; cursor:pointer;">Cancel</button>
+            </div>
+            <div class="quote-timer">
+                <div class="quote-timer-fill" id="timer-fill"></div>
+            </div>
+
+            <div class="quote-card" id="quote-1">
+                <div>
+                    <div class="dealer-name">JPMorgan</div>
+                    <div class="dealer-status">Firm Quote (Valid 30s)</div>
+                </div>
+                <div class="quote-actions" id="price-1" style="display: flex; align-items: center; gap: 8px;">
+                </div>
+            </div>
+
+            <div class="quote-card" id="quote-2">
+                <div>
+                    <div class="dealer-name">Goldman Sachs</div>
+                    <div class="dealer-status">Firm Quote (Valid 30s)</div>
+                </div>
+                <div class="quote-actions" id="price-2" style="display: flex; align-items: center; gap: 8px;">
+                </div>
+            </div>
+
+            <div class="quote-card" id="quote-3">
+                <div>
+                    <div class="dealer-name">Citi</div>
+                    <div class="dealer-status" id="citi-status" style="color:#d29922">Pricing...</div>
+                </div>
+                <div class="quote-actions" id="price-3" style="display: flex; align-items: center; gap: 8px;">
+                    <span style="color:#7d8590">-- / --</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Init date
+        const d = new Date(); d.setDate(d.getDate() + 2); // Spot settle (T+2)
+        document.getElementById('date-input').valueAsDate = d;
+
+        let currentSide = 'two-way';
+
+        function setSide(side) {
+            currentSide = side;
+            document.getElementById('side-buy').className = 'side-btn buy' + (side === 'buy' ? ' active buy' : '');
+            document.getElementById('side-sell').className = 'side-btn sell' + (side === 'sell' ? ' active sell' : '');
+            document.getElementById('side-two-way').className = 'side-btn two-way' + (side === 'two-way' ? ' active two-way' : '');
+        }
+
+        function toggleDealer(el) { el.classList.toggle('selected'); }
+
+        function cancelQuotes() {
+            document.getElementById('rfq-form').style.opacity = '1';
+            document.getElementById('rfq-form').style.pointerEvents = 'all';
+            document.getElementById('action-bar').style.display = 'flex';
+            document.getElementById('quotes-view').classList.remove('active');
+            clearTimeout(window.quoteTimer);
+        }
+
+        const renderPrice = (bid, ask) => {
+            if (currentSide === 'buy') return `<div class="quote-price">${ask}</div> <button class="btn-accept" onclick="acceptQuote(this, 'BUY', ${ask})">Buy</button>`;
+            if (currentSide === 'sell') return `<div class="quote-price">${bid}</div> <button class="btn-accept" style="background:#da3633" onclick="acceptQuote(this, 'SELL', ${bid})">Sell</button>`;
+            return `<button class="btn-accept" style="background:#da3633" onclick="acceptQuote(this, 'SELL', ${bid})">Sell @ ${bid}</button> 
+                    <button class="btn-accept" onclick="acceptQuote(this, 'BUY', ${ask})">Buy @ ${ask}</button>`;
+        };
+
+        function requestQuotes() {
+            document.getElementById('rfq-form').style.opacity = '0.5';
+            document.getElementById('rfq-form').style.pointerEvents = 'none';
+            document.getElementById('action-bar').style.display = 'none';
+
+            const inst = document.getElementById('inst-input').value || 'EUR/USD';
+            document.getElementById('qv-inst').textContent = inst;
+
+            document.getElementById('price-1').innerHTML = renderPrice(1.0851, 1.0854);
+            document.getElementById('price-2').innerHTML = renderPrice(1.0850, 1.0856);
+            document.getElementById('price-3').innerHTML = `<span style="color:#7d8590">-- / --</span>`;
+            document.getElementById('citi-status').textContent = 'Pricing...';
+            document.getElementById('citi-status').style.color = '#d29922';
+
+            const qv = document.getElementById('quotes-view');
+            qv.classList.add('active');
+
+            // Simulate lagged quote
+            window.quoteTimer = setTimeout(() => {
+                document.getElementById('citi-status').textContent = 'Firm Quote (Valid 27s)';
+                document.getElementById('citi-status').style.color = '#7d8590';
+                document.getElementById('price-3').innerHTML = renderPrice(1.0852, 1.0855);
+            }, 2500);
+
+            // Timer animation
+            const fill = document.getElementById('timer-fill');
+            fill.style.transition = 'none'; fill.style.width = '100%';
+            setTimeout(() => { fill.style.transition = 'width 30s linear'; fill.style.width = '0%'; }, 50);
+        }
+
+        function acceptQuote(btn, side, price) {
+            const card = btn.closest('.quote-card');
+            card.style.borderColor = '#3fb950';
+            card.style.background = 'rgba(63, 185, 80, 0.08)';
+            document.querySelectorAll('.btn-accept').forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
+            document.getElementById('timer-fill').style.transition = 'none';
+
+            const inst = document.getElementById('inst-input').value || 'EUR/USD';
+            const qtyStr = document.getElementById('qty-input').value.replace(/,/g, '');
+            const qtyNum = parseInt(qtyStr) || 1000000;
+
+            const today = new Date();
+            const dateStr = today.toISOString().split('T')[0];
+            const timeStr = today.toLocaleTimeString('en-US', { hour12: false });
+
+            const details = {
+                ticker: inst,
+                side: side,
+                qty: qtyNum,
+                price: price,
+                time: `${dateStr} ${timeStr}`
+            };
+
+            window.parent.postMessage({
+                source: 'mcp-fdc3-app',
+                type: 'navigateAndRaiseIntent',
+                targetTab: 'tradeBlotter',
+                intent: 'RecordNewTrade',
+                context: { type: 'fdc3.trade', details }
+            }, '*');
+
+            setTimeout(() => {
+                alert(`Trade executed! ${side} ${qtyNum.toLocaleString()} ${inst} @ ${price}`);
+                cancelQuotes();
+                card.style.borderColor = '';
+                card.style.background = '';
+                document.querySelectorAll('.btn-accept').forEach(b => { b.disabled = false; b.style.opacity = '1'; });
+            }, 600);
+        }
+
+        // FDC3 Inbound message listener
+        window.addEventListener('message', event => {
+            const msg = event.data;
+            if (!msg || msg.source !== 'mcp-fdc3-platform') return;
+
+            console.log('%c[RFQ Panel] FDC3 message', 'color:#8b949e;font-weight:bold;', msg);
+
+            if (msg.type === 'raiseIntent') {
+                // AI explicit RFQ stage intent
+                if (msg.intent === 'InitiateRFQ' && msg.context?.type === 'fdc3.order') {
+                    const details = msg.context.details || {};
+                    if (details.ticker) document.getElementById('inst-input').value = details.ticker.toUpperCase();
+                    if (details.quantity) document.getElementById('qty-input').value = details.quantity.toLocaleString();
+                    if (details.side) setSide(details.side.toLowerCase());
+
+                    document.getElementById('fdc3-banner-label').textContent = `🔵 FDC3 InitiateRFQ — staging ${details.ticker || 'request'}`;
+                    const banner = document.getElementById('fdc3-banner');
+                    banner.classList.add('visible');
+                    setTimeout(() => banner.classList.remove('visible'), 4000);
+
+                    // Reset UI if it was actively quoting
+                    document.getElementById('rfq-form').style.opacity = '1';
+                    document.getElementById('rfq-form').style.pointerEvents = 'all';
+                    document.getElementById('action-bar').style.display = 'flex';
+                    document.getElementById('quotes-view').classList.remove('active');
+                }
+                // Generio ViewInstrument intent handling
+                else {
+                    const ctx = msg.context;
+                    let ticker = ctx?.id?.ticker || ctx?.ticker || ctx?.symbol || ctx?.instruments?.[0]?.id?.ticker || null;
+                    if (ticker) {
+                        document.getElementById('inst-input').value = ticker.toUpperCase();
+                        document.getElementById('fdc3-banner-label').textContent = `🔵 FDC3 ${msg.intent || 'context'} — loaded ${ticker}`;
+                        const banner = document.getElementById('fdc3-banner');
+                        banner.classList.add('visible');
+                        setTimeout(() => banner.classList.remove('visible'), 4000);
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

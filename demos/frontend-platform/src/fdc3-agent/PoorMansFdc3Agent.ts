@@ -1,128 +1,88 @@
 
 import { type DesktopAgent, type AppIdentifier, type AppIntent, type AppMetadata, type Channel, type Context, type ContextHandler, type ContextType, type EventHandler, type ImplementationMetadata, type Intent, type IntentHandler, type IntentResolution, type Listener, type PrivateChannel, ResolveError } from '@finos/fdc3';
 
+export interface Fdc3PostMessage {
+  source: 'mcp-fdc3-platform';
+  type: 'raiseIntent' | 'broadcast' | 'clearFilter';
+  intent?: Intent;
+  context?: Context;
+}
+
+/**
+ * PoorMansFdc3Agent — broadcasts FDC3 messages to ALL registered iframe windows.
+ * Use registerWindow() / unregisterWindow() to add/remove panels.
+ */
 export class PoorMansFdc3Agent implements DesktopAgent {
-  open(app: AppIdentifier, context?: Context | undefined): Promise<AppIdentifier>;
-  open(name: string, context?: Context | undefined): Promise<AppIdentifier>;
-  open(name: unknown, context?: unknown): Promise<import("@finos/fdc3").AppIdentifier> {
-    throw new Error('Method not implemented.');
+  private _windows = new Set<Window>();
+
+  registerWindow(win: Window | null | undefined): void {
+    if (win) {
+      this._windows.add(win);
+      console.log(`%cPoorMansFdc3Agent: registered window (total: ${this._windows.size})`, 'color:#3fb950;font-weight:bold;');
+    }
   }
 
-  findIntent(intent: Intent, context?: Context | undefined, resultType?: string | undefined): Promise<AppIntent> {
-    throw new Error('Method not implemented.');
+  unregisterWindow(win: Window | null | undefined): void {
+    if (win) this._windows.delete(win);
   }
 
-  findIntentsByContext(context: Context, resultType?: string | undefined): Promise<AppIntent[]> {
-    throw new Error('Method not implemented.');
+  /** Broadcast a raw message to all registered windows. */
+  private _broadcast(msg: Fdc3PostMessage): void {
+    if (this._windows.size === 0) {
+      console.warn('PoorMansFdc3Agent: no registered windows to broadcast to');
+      return;
+    }
+    this._windows.forEach(win => {
+      try { win.postMessage(msg, '*'); } catch (_) { }
+    });
+    console.log(`%cPoorMansFdc3Agent: broadcast to ${this._windows.size} window(s)`, 'color:#58a6ff;font-weight:bold;', msg);
+  }
+
+  // ── DesktopAgent — implemented methods ──────────────────────────────────
+
+  async raiseIntent(intent: Intent, context: Context, app?: AppIdentifier | string): Promise<IntentResolution> {
+    console.log('%cPoorMansFdc3Agent.raiseIntent', 'font-weight:bold;', { intent, context });
+
+    const appId = typeof app === 'string' ? app : app?.appId;
+    if (!appId) throw new Error(ResolveError.NoAppsFound);
+
+    this._broadcast({ source: 'mcp-fdc3-platform', type: 'raiseIntent', intent, context });
+
+    return {
+      source: { appId } as AppIdentifier,
+      version: '2.0',
+      intent,
+      getResult: () => Promise.resolve({} as import('@finos/fdc3').IntentResult),
+    } as IntentResolution;
   }
 
   async findInstances(app: AppIdentifier): Promise<AppIdentifier[]> {
-    //TODO - This could only be stubbed out further if there was some proper DA functionality implemented in this class
-    //So for now, let's simply create a synthetic instanceId to demonstrate how MCP-FDC3 library would operate if it
-    //found an existing running instance of the app
-    console.log('%cPoorMansFdc3Agent.findInstances', 'font-weight:bold;');
-    console.log(`app.appId: ${app.appId}`);
-    return Promise.resolve([
-      {
-        appId: app.appId,
-        instanceId: window.crypto?.randomUUID(),
-      }
-    ] as Array<AppIdentifier>);
+    return [{ appId: app.appId, instanceId: window.crypto?.randomUUID() }];
   }
 
-  broadcast(context: Context): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
+  // ── DesktopAgent — stubs ────────────────────────────────────────────────
 
-  async raiseIntent(intent: Intent, context: Context, app?: AppIdentifier | undefined): Promise<IntentResolution>;
-  async raiseIntent(intent: Intent, context: Context, name: string): Promise<IntentResolution>;
-  async raiseIntent(intent: Intent, context: Context, appOrName?: AppIdentifier | string): Promise<IntentResolution> {
-    console.log('%cPoorMansFdc3Agent.raiseIntent', 'font-weight:bold;');
-    //TODO - Validate context and throw ResolveError.MalformedContext error if necessary
-    const app: AppIdentifier | undefined = this._deriveAppIdentifier(appOrName);
-    if (!app) {
-      throw new Error(ResolveError.NoAppsFound);
-    }
-    // For now, let's simply log out the arguments received by this FDC3 Desktop Agent API method
-    // This allows use to prove that MCP-FDC3 library can be used to trigger FDC3 interop via an AI Agent response to a user prompt
-    console.log(`intent: ${intent}`);
-    console.log('context:');
-    console.log(context);
-    console.log('app:');
-    console.log(app);
-
-    //TODO - Stub out further. Or perhaps replace with reference implementation of an FDC3 DA from finos/FDC3 repo
-  }
-
-  raiseIntentForContext(context: Context, app?: AppIdentifier | undefined): Promise<IntentResolution>;
-  raiseIntentForContext(context: Context, name: string): Promise<IntentResolution>;
-  raiseIntentForContext(context: unknown, name?: unknown): Promise<IntentResolution> {
-    throw new Error('Method not implemented.');
-  }
-
-  addIntentListener(intent: Intent, handler: IntentHandler): Promise<Listener> {
-    throw new Error('Method not implemented.');
-  }
-
-  addContextListener(contextType: ContextType | null, handler: ContextHandler): Promise<Listener>;
-  addContextListener(handler: ContextHandler): Promise<Listener>;
-  addContextListener(contextType: unknown, handler?: unknown): Promise<Listener> {
-    throw new Error('Method not implemented.');
-  }
-
-  addEventListener(type: 'userChannelChanged' | null, handler: EventHandler): Promise<Listener> {
-    throw new Error('Method not implemented.');
-  }
-
-  getUserChannels(): Promise<Channel[]> {
-    throw new Error('Method not implemented.');
-  }
-
-  joinUserChannel(channelId: string): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
-
-  getOrCreateChannel(channelId: string): Promise<Channel> {
-    throw new Error('Method not implemented.');
-  }
-
-  createPrivateChannel(): Promise<PrivateChannel> {
-    throw new Error('Method not implemented.');
-  }
-
-  getCurrentChannel(): Promise<Channel | null> {
-    throw new Error('Method not implemented.');
-  }
-
-  leaveCurrentChannel(): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
-
-  getInfo(): Promise<ImplementationMetadata> {
-    throw new Error('Method not implemented.');
-  }
-
-  getAppMetadata(app: AppIdentifier): Promise<AppMetadata> {
-    throw new Error('Method not implemented.');
-  }
-
-  getSystemChannels(): Promise<Channel[]> {
-    throw new Error('Method not implemented.');
-  }
-
-  joinChannel(channelId: string): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
-
-  private _deriveAppIdentifier(appOrName?: AppIdentifier | string): AppIdentifier | undefined {
-    let app: AppIdentifier | undefined;
-    if (appOrName && typeof appOrName === 'object' && appOrName.appId) {
-      app = appOrName as AppIdentifier;
-    } else if (appOrName && typeof appOrName === 'string') {
-      app = {
-        appId: appOrName
-      } as AppIdentifier;
-    }
-    return app;
-  }
+  open(_app: AppIdentifier, _context?: Context): Promise<AppIdentifier>;
+  open(_name: string, _context?: Context): Promise<AppIdentifier>;
+  open(_name: unknown, _context?: unknown): Promise<AppIdentifier> { throw new Error('Not implemented'); }
+  findIntent(_i: Intent, _c?: Context, _r?: string): Promise<AppIntent> { throw new Error('Not implemented'); }
+  findIntentsByContext(_c: Context, _r?: string): Promise<AppIntent[]> { throw new Error('Not implemented'); }
+  broadcast(_c: Context): Promise<void> { throw new Error('Not implemented'); }
+  raiseIntentForContext(_c: Context, _a?: AppIdentifier | string): Promise<IntentResolution>;
+  raiseIntentForContext(_c: unknown, _a?: unknown): Promise<IntentResolution> { throw new Error('Not implemented'); }
+  addIntentListener(_i: Intent, _h: IntentHandler): Promise<Listener> { throw new Error('Not implemented'); }
+  addContextListener(_ct: ContextType | null, _h: ContextHandler): Promise<Listener>;
+  addContextListener(_h: ContextHandler): Promise<Listener>;
+  addContextListener(_ct: unknown, _h?: unknown): Promise<Listener> { throw new Error('Not implemented'); }
+  addEventListener(_t: 'userChannelChanged' | null, _h: EventHandler): Promise<Listener> { throw new Error('Not implemented'); }
+  getUserChannels(): Promise<Channel[]> { throw new Error('Not implemented'); }
+  joinUserChannel(_id: string): Promise<void> { throw new Error('Not implemented'); }
+  getOrCreateChannel(_id: string): Promise<Channel> { throw new Error('Not implemented'); }
+  createPrivateChannel(): Promise<PrivateChannel> { throw new Error('Not implemented'); }
+  getCurrentChannel(): Promise<Channel | null> { throw new Error('Not implemented'); }
+  leaveCurrentChannel(): Promise<void> { throw new Error('Not implemented'); }
+  getInfo(): Promise<ImplementationMetadata> { throw new Error('Not implemented'); }
+  getAppMetadata(_a: AppIdentifier): Promise<AppMetadata> { throw new Error('Not implemented'); }
+  getSystemChannels(): Promise<Channel[]> { throw new Error('Not implemented'); }
+  joinChannel(_id: string): Promise<void> { throw new Error('Not implemented'); }
 }
