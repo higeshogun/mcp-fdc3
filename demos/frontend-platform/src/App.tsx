@@ -15,7 +15,7 @@ interface IframePanelProps {
   cls: string;
 }
 
-const IframePanel = ({ url, title, cls }: IframePanelProps) => {
+const IframePanel = ({ url, title }: IframePanelProps) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
