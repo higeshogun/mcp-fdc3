@@ -29,8 +29,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 20px;
-      height: 52px;
+      padding: 0 16px;
+      height: 40px;
       background: #161b22;
       border-bottom: 1px solid #30363d;
       flex-shrink: 0
@@ -39,18 +39,18 @@
     .header-left {
       display: flex;
       align-items: center;
-      gap: 12px
+      gap: 10px
     }
 
     .app-badge {
       display: flex;
       align-items: center;
-      gap: 7px;
+      gap: 6px;
       background: rgba(88, 166, 255, .12);
       border: 1px solid rgba(88, 166, 255, .3);
-      border-radius: 6px;
-      padding: 4px 10px;
-      font-size: 13px;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 12px;
       font-weight: 600;
       color: #58a6ff
     }
@@ -75,14 +75,14 @@
     }
 
     .stat-label {
-      font-size: 10px;
+      font-size: 9px;
       color: #7d8590;
       text-transform: uppercase;
       letter-spacing: .06em
     }
 
     .stat-value {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       margin-top: 1px
     }
@@ -170,11 +170,11 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 20px;
+      padding: 8px 16px;
       background: #161b22;
       border-bottom: 1px solid #21262d;
       flex-shrink: 0;
-      gap: 12px
+      gap: 10px
     }
 
     .toolbar-left {
@@ -262,7 +262,7 @@
     }
 
     th {
-      padding: 9px 14px;
+      padding: 6px 12px;
       text-align: left;
       font-size: 11px;
       font-weight: 600;
@@ -293,10 +293,6 @@
       background: rgba(88, 166, 255, .04)
     }
 
-    tbody tr:hover .row-actions {
-      opacity: 1
-    }
-
     tbody tr.selected {
       background: rgba(88, 166, 255, .08)
     }
@@ -318,7 +314,7 @@
     }
 
     td {
-      padding: 9px 14px;
+      padding: 6px 12px;
       font-size: 13px;
       white-space: nowrap
     }
@@ -518,7 +514,7 @@
 <body>
   <div class="fdc3-banner" id="fdc3-banner">
     <span class="fdc3-banner-label" id="fdc3-banner-label">FDC3 context received</span>
-    <button class="fdc3-clear-btn" onclick="clearFdc3Filter()">✕ Clear filter</button>
+    <button class="fdc3-clear-btn" onclick="clearFdc3Filter()">✕ Clear</button>
   </div>
 
   <div class="toolbar">
@@ -528,11 +524,7 @@
       <button class="filter-btn" onclick="setFilter('sell',this)">Sell</button>
     </div>
     <div class="search-box">
-      <svg viewBox="0 0 16 16">
-        <path
-          d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.156a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z" />
-      </svg>
-      <input type="text" id="search" placeholder="Search ticker or company…" oninput="renderTable()" />
+      <input type="text" id="search" placeholder="Search..." oninput="renderTable()" />
     </div>
   </div>
 
@@ -540,10 +532,10 @@
     <table>
       <thead>
         <tr>
-          <th onclick="sortBy('time')">Exec Time</th>
-          <th onclick="sortBy('tradeId')">Trade ID</th>
-          <th onclick="sortBy('orderId')">Order ID</th>
-          <th onclick="sortBy('ticker')">Instrument</th>
+          <th onclick="sortBy('time')">Time</th>
+          <th onclick="sortBy('tradeId')">Trade</th>
+          <th onclick="sortBy('orderId')">Order</th>
+          <th onclick="sortBy('ticker')">Inst</th>
           <th onclick="sortBy('side')">Side</th>
           <th onclick="sortBy('qty')">Qty</th>
           <th onclick="sortBy('price')">Price</th>
@@ -556,8 +548,7 @@
   </div>
 
   <footer>
-    <div class="footer-info">Showing <span id="showing">—</span> of <span id="total">—</span> trades · Updated <span
-        id="last-updated">—</span></div>
+    <div class="footer-info">Showing <span id="showing">—</span> of <span id="total">—</span></div>
     <div class="live-dot">Live</div>
   </footer>
 
@@ -575,21 +566,8 @@
       { tradeId: 'X9413', orderId: 'O002', time: `${mockDate} 09:32:12`, ticker: 'MSFT', company: 'Microsoft Corp.', side: 'BUY', qty: 200, price: 418.92, venue: 'EDGX' },
       { tradeId: 'X9414', orderId: 'O003', time: `${mockDate} 09:33:46`, ticker: 'TSLA', company: 'Tesla Inc.', side: 'SELL', qty: 150, price: 248.60, venue: 'NASDAQ' },
       { tradeId: 'X9415', orderId: 'O004', time: `${mockDate} 09:35:23`, ticker: 'NVDA', company: 'NVIDIA Corp.', side: 'BUY', qty: 80, price: 875.40, venue: 'ARCA' },
-      // AMZN Order O005 was PARTIAL - 60 shares ordered, 40 filled here
       { tradeId: 'X9416', orderId: 'O005', time: `${mockDate} 09:37:10`, ticker: 'AMZN', company: 'Amazon.com Inc.', side: 'BUY', qty: 40, price: 193.18, venue: 'BATS' },
       { tradeId: 'X9417', orderId: 'O006', time: `${mockDate} 09:38:51`, ticker: 'GOOGL', company: 'Alphabet Inc.', side: 'SELL', qty: 40, price: 172.15, venue: 'NASDAQ' },
-      { tradeId: 'X9418', orderId: 'O007', time: `${mockDate} 09:39:35`, ticker: 'META', company: 'Meta Platforms Inc.', side: 'BUY', qty: 120, price: 583.70, venue: 'EDGX' },
-      // JPM Order O008 was 300 shares, filled in two prints
-      { tradeId: 'X9419', orderId: 'O008', time: `${mockDate} 09:41:18`, ticker: 'JPM', company: 'JPMorgan Chase & Co.', side: 'SELL', qty: 200, price: 212.80, venue: 'NYSE' },
-      { tradeId: 'X9420', orderId: 'O008', time: `${mockDate} 09:41:19`, ticker: 'JPM', company: 'JPMorgan Chase & Co.', side: 'SELL', qty: 100, price: 212.78, venue: 'ARCA' },
-      { tradeId: 'X9421', orderId: 'O010', time: `${mockDate} 09:44:31`, ticker: 'NFLX', company: 'Netflix Inc.', side: 'SELL', qty: 90, price: 698.20, venue: 'NASDAQ' },
-      { tradeId: 'X9422', orderId: 'O013', time: `${mockDate} 09:48:56`, ticker: 'LLY', company: 'Eli Lilly & Co.', side: 'BUY', qty: 25, price: 867.50, venue: 'BATS' },
-      { tradeId: 'X9423', orderId: 'O014', time: `${mockDate} 09:50:12`, ticker: 'V', company: 'Visa Inc.', side: 'BUY', qty: 180, price: 283.40, venue: 'NYSE' },
-      // SPY Order O015 was PARTIAL - 1000 ordered, 400 + 350 filled so far
-      { tradeId: 'X9424', orderId: 'O015', time: `${mockDate} 09:52:39`, ticker: 'SPY', company: 'SPDR S&P 500 ETF', side: 'BUY', qty: 400, price: 521.80, venue: 'ARCA' },
-      { tradeId: 'X9425', orderId: 'O015', time: `${mockDate} 09:52:41`, ticker: 'SPY', company: 'SPDR S&P 500 ETF', side: 'BUY', qty: 350, price: 521.81, venue: 'EDGX' },
-      { tradeId: 'X9426', orderId: 'O016', time: `${mockDate} 09:53:45`, ticker: 'QQQ', company: 'Invesco QQQ Trust', side: 'SELL', qty: 500, price: 448.20, venue: 'NASDAQ' },
-      { tradeId: 'X9427', orderId: 'O017', time: `${mockDate} 09:55:01`, ticker: 'AMD', company: 'Advanced Micro Devices', side: 'BUY', qty: 400, price: 178.90, venue: 'BATS' },
     ];
 
     let currentFilter = 'all', sortCol = 'time', sortDir = -1, selectedId = null, fdc3Ticker = null;
@@ -679,11 +657,6 @@
       }).join('');
       document.getElementById('showing').textContent = rows.length;
       document.getElementById('total').textContent = TRADES.length;
-      const totalVol = TRADES.reduce((s, t) => s + (t.qty * t.price), 0);
-      document.getElementById('total-notional').textContent = '$' + fmt(totalVol);
-      document.getElementById('trade-count').textContent = TRADES.length;
-      const now = new Date();
-      document.getElementById('last-updated').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     }
 
     function selectRow(id) { selectedId = id === selectedId ? null : id; renderTable(); }
