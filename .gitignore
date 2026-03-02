@@ -83,3 +83,4 @@
 /packages/server/node_modules
 /packages/server/dist
 /packages/server/.env
+demos/backend-ai-agent-ts/src/.env
