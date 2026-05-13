@@ -86,11 +86,13 @@ app.post('/mcp', async (req, res) => {
     // @ts-expect-error type instantiation too deep
     server.registerTool('submitOrder', {
       title: 'SubmitOrder',
-      description: 'Stages a traditional order in the Order Ticket app (Equities or simple instruments). Provide the side (buy/sell), quantity, and ticker symbol. The frontend will populate the Order Ticket where the user can confirm execution.',
+      description: 'Stages a traditional order in the Order Ticket app (Equities or simple instruments). Provide the side (buy/sell), ticker symbol, and optionally quantity (default 100), order type (market/limit), and limit price.',
       inputSchema: {
         side: z.enum(['buy', 'sell']).describe('The side of the order (buy or sell)'),
-        quantity: z.number().describe('The number of shares/contracts to trade'),
         ticker: z.string().describe('The ticker symbol, e.g., AAPL, MSFT'),
+        quantity: z.number().optional().default(100).describe('The number of shares/contracts to trade (default 100)'),
+        orderType: z.enum(['market', 'limit']).optional().default('market').describe('Order type: market or limit (default market)'),
+        price: z.number().optional().describe('Limit price — required when orderType is limit'),
       },
     }, submitOrder as any);
 
