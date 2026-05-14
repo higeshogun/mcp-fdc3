@@ -42,12 +42,10 @@ export const GoldenLayoutWrapper: React.FC<GoldenLayoutWrapperProps> = ({ config
           return next;
         });
 
-        return {
-          virtual: true,
-          component: {
-            rootHtmlElement: container.element
-          }
-        };
+        // Return virtual: false so GoldenLayout uses position: absolute and manages sizing.
+        // virtual: true sets position: static which breaks the grid — panels stack in DOM order
+        // instead of rendering in their proper grid cells. React portals still fill container.element.
+        return { virtual: false, component: {} };
       },
       (container: ComponentContainer) => {
         // Our registry relies on the ID we gave it, but since unbind only gives us the container,

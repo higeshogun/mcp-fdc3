@@ -100,13 +100,13 @@ app.post('/mcp', async (req, res) => {
     // @ts-expect-error type instantiation too deep
     server.registerTool('submitOrder', {
       title: 'SubmitOrder',
-      description: 'Constructs an FDC3 fdc3.order context and stages a traditional order via the SubmitOrder intent in the Order Ticket app (Equities or simple instruments like AAPL or MSFT). The frontend will populate the Order Ticket where the user can manually confirm execution.',
+      description: 'Stages a traditional order in the Order Ticket app (Equities or simple instruments). Provide the side (buy/sell), ticker symbol, and optionally quantity (default 100), order type (market/limit), and limit price.',
       inputSchema: {
         side: z.enum(['buy', 'sell']).describe('The side of the order (buy or sell)'),
-        quantity: z.number().describe('The number of shares/contracts to trade'),
         ticker: z.string().describe('The ticker symbol, e.g., AAPL, MSFT'),
-        orderType: z.enum(['market', 'limit']).optional().default('market').describe('The type of order (market or limit). If the user mentions a price, this MUST be set to "limit"'),
-        price: z.number().optional().describe('The mock limit price to populate in the UI field. You MUST extract and provide this number if the user mentions a price.'),
+        quantity: z.number().optional().default(100).describe('The number of shares/contracts to trade (default 100)'),
+        orderType: z.enum(['market', 'limit']).optional().default('market').describe('Order type: market or limit (default market)'),
+        price: z.number().optional().describe('Limit price — required when orderType is limit'),
       },
     }, submitOrder as any);
 
