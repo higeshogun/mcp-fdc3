@@ -29,7 +29,7 @@ export const getTrades = async ({ companyName }: { companyName: string }): Promi
       content: [
         {
           type: 'text',
-          text: `Trades retrieved for ${company.name}`,
+          text: `Successfully retrieved trades for ${company.name} and raised an FDC3 ViewInstrument intent targeting the Trade Blotter. The user's UI is now filtered to show only these trades. You may ask the user if they want to see news for this instrument or construct an order.`,
         },
         fdc3Resource,
       ],
@@ -40,7 +40,7 @@ export const getTrades = async ({ companyName }: { companyName: string }): Promi
       content: [
         {
           type: 'text',
-          text: `Error: Failed to lookup company for company name '${companyName}'`,
+          text: `Error: Failed to lookup company for '${companyName}'. Please verify the company name or ticker symbol. If unsure, ask the user to clarify the exact company or instrument they mean.`,
         },
         // isError: true,
       ],

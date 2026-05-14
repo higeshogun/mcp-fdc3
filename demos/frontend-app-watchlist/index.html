@@ -432,7 +432,7 @@
                     type: 'fdc3.instrument',
                     id: { ticker: ticker }
                 }
-            }, '*');
+            }, window.location.origin);
 
             // Highlight locally
             fdc3Ticker = ticker;
@@ -449,6 +449,7 @@
 
         // ── FDC3 postMessage listener ─────────────
         window.addEventListener('message', event => {
+            if (event.origin !== window.location.origin) return;
             const msg = event.data;
             if (!msg || msg.source !== 'mcp-fdc3-platform') return;
             console.log('%c[Watchlist] FDC3 message', 'color:#3fb950;font-weight:bold;', msg);

@@ -4,8 +4,10 @@ import { type DesktopAgent, type AppIdentifier, type AppIntent, type AppMetadata
 export interface Fdc3PostMessage {
   source: 'mcp-fdc3-platform';
   type: 'raiseIntent' | 'broadcast' | 'clearFilter';
+  sessionId: string;
   intent?: Intent;
   context?: Context;
+  _fromInternal?: boolean;
 }
 
 /**
@@ -14,6 +16,19 @@ export interface Fdc3PostMessage {
  */
 export class PoorMansFdc3Agent implements DesktopAgent {
   private _windows = new Set<Window>();
+  private _channel = new BroadcastChannel('mcp-fdc3-sync');
+  private _sessionId: string;
+
+  constructor(sessionId: string) {
+    this._sessionId = sessionId;
+    this._channel.onmessage = (event) => {
+      const msg = event.data;
+      if (msg && msg.source === 'mcp-fdc3-platform' && msg._fromInternal && msg.sessionId === this._sessionId) {
+        // Re-broadcast to local iframes, but DO NOT send back to channel
+        this._doLocalBroadcast(msg);
+      }
+    };
+  }
 
   registerWindow(win: Window | null | undefined): void {
     if (win) {
@@ -26,16 +41,18 @@ export class PoorMansFdc3Agent implements DesktopAgent {
     if (win) this._windows.delete(win);
   }
 
-  /** Broadcast a raw message to all registered windows. */
-  private _broadcast(msg: Fdc3PostMessage): void {
-    if (this._windows.size === 0) {
-      console.warn('PoorMansFdc3Agent: no registered windows to broadcast to');
-      return;
-    }
+  /** Broadcast a raw message to all registered windows locally. */
+  private _doLocalBroadcast(msg: Fdc3PostMessage): void {
     this._windows.forEach(win => {
       try { win.postMessage(msg, '*'); } catch (_) { }
     });
-    console.log(`%cPoorMansFdc3Agent: broadcast to ${this._windows.size} window(s)`, 'color:#58a6ff;font-weight:bold;', msg);
+    console.log(`%cPoorMansFdc3Agent: broadcast locally to ${this._windows.size} window(s)`, 'color:#58a6ff;font-weight:bold;', msg);
+  }
+
+  /** Broadcast globally to local iframes and other popout windows. */
+  private _broadcast(msg: Fdc3PostMessage): void {
+    this._doLocalBroadcast(msg);
+    this._channel.postMessage({ ...msg, _fromInternal: true });
   }
 
   // ── DesktopAgent — implemented methods ──────────────────────────────────
@@ -46,7 +63,12 @@ export class PoorMansFdc3Agent implements DesktopAgent {
     const appId = typeof app === 'string' ? app : app?.appId;
     if (!appId) throw new Error(ResolveError.NoAppsFound);
 
-    this._broadcast({ source: 'mcp-fdc3-platform', type: 'raiseIntent', intent, context });
+    // Notify the platform (App.tsx) so it can open the panel if needed
+    window.dispatchEvent(new CustomEvent('fdc3-intent', {
+      detail: { intent, context, appId }
+    }));
+
+    this._broadcast({ source: 'mcp-fdc3-platform', type: 'raiseIntent', sessionId: this._sessionId, intent, context });
 
     return {
       source: { appId } as AppIdentifier,

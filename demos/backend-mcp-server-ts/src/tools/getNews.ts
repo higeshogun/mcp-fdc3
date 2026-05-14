@@ -27,7 +27,7 @@ export const getNews = async ({ companyName }: { companyName: string }): Promise
             content: [
                 {
                     type: 'text',
-                    text: `News filtered for ${company.name} (${company.ticker})`,
+                    text: `Successfully filtered news for ${company.name} (${company.ticker}) using an FDC3 ViewInstrument intent. The user's News Panel is now displaying relevant headlines. You can ask if they would like to view historical trades or stage a trade for this instrument.`,
                 },
                 fdc3Resource,
             ],
@@ -37,7 +37,7 @@ export const getNews = async ({ companyName }: { companyName: string }): Promise
             content: [
                 {
                     type: 'text',
-                    text: `Could not find a matching company for '${companyName}'. Try using a full company name (e.g. "Apple" or "NVIDIA").`,
+                    text: `Error: Could not find a matching company for '${companyName}'. Please verify the company name or ticker symbol. If unsure, ask the user to clarify the exact company or instrument they mean.`,
                 },
             ],
         };

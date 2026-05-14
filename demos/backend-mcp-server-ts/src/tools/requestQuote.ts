@@ -19,7 +19,7 @@ export async function requestQuote(args: z.infer<typeof requestQuoteDefinition.p
         return {
             content: [{
                 type: 'text',
-                text: `Error: Could not resolve a valid instrument for "${args.instrument}".`
+                text: `Error: Could not resolve a valid instrument for "${args.instrument}". Please verify the symbol. If unsure, ask the user to clarify.`
             }],
             isError: true
         };
@@ -40,7 +40,7 @@ export async function requestQuote(args: z.infer<typeof requestQuoteDefinition.p
         content: [
             {
                 type: 'text',
-                text: `RFQ staged in the UI for ${args.side.toUpperCase()} ${args.quantity} ${resolvedTicker}. The user must review and click 'Request Quotes' in the panel.`
+                text: `RFQ for ${args.side.toUpperCase()} ${args.quantity} ${resolvedTicker} successfully staged via an FDC3 InitiateRFQ intent. The RFQ panel is now populated. Instruct the user to review the details and click 'Request Quotes' in the panel to proceed.`
             },
             fdc3Resource
         ]

@@ -5,7 +5,22 @@ import { GoldenLayoutWrapper } from './components/GoldenLayoutWrapper';
 import { LayoutConfig, GoldenLayout } from 'golden-layout';
 import './App.css';
 
-const fdc3Agent = new PoorMansFdc3Agent();
+const FDC3_SESSION_STORAGE_KEY = 'mcp-fdc3-ui-session-id';
+
+function getFdc3SessionId(): string {
+  const existing = window.sessionStorage.getItem(FDC3_SESSION_STORAGE_KEY);
+  if (existing) {
+    return existing;
+  }
+
+  const created = window.crypto.randomUUID();
+  window.sessionStorage.setItem(FDC3_SESSION_STORAGE_KEY, created);
+  return created;
+}
+
+const platformOrigin = window.location.origin;
+const fdc3SessionId = getFdc3SessionId();
+const fdc3Agent = new PoorMansFdc3Agent(fdc3SessionId);
 
 // Map panel types to their configs
 interface IframePanelProps {
@@ -167,6 +182,8 @@ function App() {
   // Note: We're broadcasting this to ALL registered windows now,
   // since Golden Layout makes it harder to maintain refs to specific iframes by ID
   const handleChildMessage = useCallback((event: MessageEvent) => {
+    if (event.origin !== platformOrigin) return;
+
     const msg = event.data;
     if (!msg || msg.source !== 'mcp-fdc3-app') return;
 
@@ -174,6 +191,7 @@ function App() {
       const fdc3Msg = {
         source: 'mcp-fdc3-platform' as const,
         type: 'raiseIntent' as const,
+        sessionId: fdc3SessionId,
         intent: msg.intent ?? 'ViewInstrument',
         context: msg.context,
       };
@@ -184,7 +202,7 @@ function App() {
       iframes.forEach((ifr: Element) => {
         const win = (ifr as HTMLIFrameElement).contentWindow;
         if (win && win !== event.source && typeof win.postMessage === 'function') {
-          win.postMessage(fdc3Msg, '*');
+          win.postMessage(fdc3Msg, platformOrigin);
         }
       });
     }
@@ -195,7 +213,7 @@ function App() {
     return () => window.removeEventListener('message', handleChildMessage);
   }, [handleChildMessage]);
 
-  const addPanel = (url: string, title: string, icon: string, cls: string) => {
+  const addPanel = useCallback((url: string, title: string, icon: string, cls: string) => {
     if (!layoutReady || !layoutReady.rootItem) return;
 
     // Use GL's addComponent to push a new component into the layout tree
@@ -204,7 +222,44 @@ function App() {
     } catch (e) {
       console.error("Could not add panel", e);
     }
-  };
+  }, [layoutReady]);
+
+  useEffect(() => {
+    const handleFdc3Intent = (e: Event) => {
+      const { intent, context, appId } = (e as CustomEvent).detail;
+      const appMap: Record<string, { url: string, title: string, icon: string, cls: string }> = {
+        'frontend-app-order-ticket': { url: '/demos/frontend-app-order-ticket/index.html', title: 'Order Ticket', icon: '⚡', cls: 'ticket' },
+        'frontend-app-blotter': { url: '/demos/frontend-app-blotter/index.html', title: 'Orders Blotter', icon: '📋', cls: 'blotter' },
+        'frontend-app-trade-blotter': { url: '/demos/frontend-app-trade-blotter/index.html', title: 'Trade Blotter', icon: '🧾', cls: 'trade-blotter' },
+        'frontend-app-rfq': { url: '/demos/frontend-app-rfq/index.html', title: 'RFQ Panel', icon: '💬', cls: 'rfq' },
+        'frontend-app-news': { url: '/demos/frontend-app-news/index.html', title: 'News Feed', icon: '📰', cls: 'news' },
+        'frontend-app-watchlist': { url: '/demos/frontend-app-watchlist/index.html', title: 'Watchlist', icon: '📊', cls: 'watchlist' }
+      };
+
+      if (appId && appMap[appId]) {
+        // Check if it's already open by checking if layout contains it or the DOM has the iframe
+        const isOpen = !!document.querySelector(`iframe[src="${appMap[appId].url}"]`);
+        if (!isOpen) {
+          const cfg = appMap[appId];
+          addPanel(cfg.url, cfg.title, cfg.icon, cfg.cls);
+
+          // Re-broadcast the intent slightly delayed so the newly opened panel can receive it
+          setTimeout(() => {
+            const iframes = document.querySelectorAll('iframe.panel-frame');
+            iframes.forEach((ifr: Element) => {
+              const win = (ifr as HTMLIFrameElement).contentWindow;
+              if (win && typeof win.postMessage === 'function') {
+                win.postMessage({ source: 'mcp-fdc3-platform', type: 'raiseIntent', sessionId: fdc3SessionId, intent, context }, platformOrigin);
+              }
+            });
+          }, 500);
+        }
+      }
+    };
+
+    window.addEventListener('fdc3-intent', handleFdc3Intent);
+    return () => window.removeEventListener('fdc3-intent', handleFdc3Intent);
+  }, [addPanel]);
 
   const isPopout = window.location.search.includes('gl-window');
 

@@ -454,7 +454,7 @@
                 targetTab: 'tradeBlotter',
                 intent: 'RecordNewTrade',
                 context: { type: 'fdc3.trade', details }
-            }, '*');
+            }, window.location.origin);
 
             setTimeout(() => {
                 alert(`Trade executed! ${side} ${qtyNum.toLocaleString()} ${inst} @ ${price}`);
@@ -467,6 +467,7 @@
 
         // FDC3 Inbound message listener
         window.addEventListener('message', event => {
+            if (event.origin !== window.location.origin) return;
             const msg = event.data;
             if (!msg || msg.source !== 'mcp-fdc3-platform') return;
 

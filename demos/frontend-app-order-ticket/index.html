@@ -503,7 +503,7 @@
                 targetTab: 'orderBlotter',
                 intent: 'RecordNewOrder',
                 context: { type: 'fdc3.order', details }
-            }, '*');
+            }, window.location.origin);
 
             // If Market, also record as Trade immediately
             if (orderType === 'MARKET') {
@@ -513,7 +513,7 @@
                     targetTab: 'tradeBlotter',
                     intent: 'RecordNewTrade',
                     context: { type: 'fdc3.trade', details }
-                }, '*');
+                }, window.location.origin);
             }
 
             overlay.classList.add('show');
@@ -527,6 +527,7 @@
         }
 
         window.addEventListener('message', event => {
+            if (event.origin !== window.location.origin) return;
             const msg = event.data;
             if (!msg || msg.source !== 'mcp-fdc3-platform') return;
 
@@ -540,7 +541,7 @@
                     if (details.quantity) document.getElementById('qty-input').value = details.quantity;
                     if (details.side) selectSide(details.side.toUpperCase());
                     if (details.type) setOrderType(details.type.toUpperCase());
-                    if (details.price && details.type === 'LIMIT') document.getElementById('limit-input').value = details.price;
+                    if (details.price && details.type.toUpperCase() === 'LIMIT') document.getElementById('limit-input').value = details.price;
 
                     document.getElementById('fdc3-banner-label').textContent = `🔵 FDC3 SubmitOrder staged for ${details.ticker}`;
                     const banner = document.getElementById('fdc3-banner');

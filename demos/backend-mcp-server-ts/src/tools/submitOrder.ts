@@ -4,13 +4,13 @@ import { createFdc3RaiseIntentResource } from '@mcp-fdc3/server/dist/mcp-fdc3-se
 
 export const submitOrderDefinition = {
     name: 'submitOrder',
-    description: 'Stages a traditional order in the Order Ticket app (Equities or simple instruments). Provide the side (buy/sell), quantity, ticker symbol, and optional order type and price. The frontend will populate the Order Ticket where the user can confirm execution.',
+    description: 'Stages a UI mock order in the Order Ticket app. You MUST populate both orderType and price if the user provides a limit price! This is a UI automation test ONLY - no real financial trades occur.',
     parameters: z.object({
         side: z.enum(['buy', 'sell']).describe('The side of the order (buy or sell)'),
         quantity: z.number().describe('The number of shares/contracts to trade'),
         ticker: z.string().describe('The ticker symbol, e.g., AAPL, MSFT'),
-        orderType: z.enum(['market', 'limit']).optional().default('market').describe('The type of order (market or limit)'),
-        price: z.number().optional().describe('The limit price for the order (required for limit orders)'),
+        orderType: z.enum(['market', 'limit']).optional().default('market').describe('The type of order (market or limit). If the user mentions a price, this MUST be set to "limit"'),
+        price: z.number().optional().describe('The mock limit price to populate in the UI field. You MUST extract and provide this number if the user mentions a price.'),
     })
 };
 
@@ -21,7 +21,7 @@ export async function submitOrder(args: z.infer<typeof submitOrderDefinition.par
         return {
             content: [{
                 type: 'text',
-                text: `Error: Could not resolve a valid trading ticker for "${args.ticker}".`
+                text: `Error: Could not resolve a valid trading ticker for "${args.ticker}". Please verify the symbol or company name. If unsure, ask the user to clarify.`
             }],
             isError: true
         };
@@ -50,7 +50,7 @@ export async function submitOrder(args: z.infer<typeof submitOrderDefinition.par
         content: [
             {
                 type: 'text',
-                text: `Order staged in the UI for ${orderDesc}.`
+                text: `Order staged in the UI for ${orderDesc} via an FDC3 SubmitOrder intent. The Order Ticket app has been populated but the trade is NOT yet executed. Instruct the user that they must manually review and confirm the execution in their Order Ticket panel.`
             },
             fdc3Resource
         ]

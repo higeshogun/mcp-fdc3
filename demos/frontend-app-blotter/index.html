@@ -629,7 +629,7 @@
         targetTab,
         intent: 'ViewInstrument',
         context,
-      }, '*');
+      }, window.location.origin);
       showToast(targetTab, ticker);
     }
 
@@ -687,6 +687,7 @@
     }
 
     window.addEventListener('message', event => {
+      if (event.origin !== window.location.origin) return;
       const msg = event.data;
       if (!msg || msg.source !== 'mcp-fdc3-platform') return;
       if (msg.type === 'raiseIntent') {

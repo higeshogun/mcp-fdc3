@@ -6,9 +6,21 @@ import { getStructuredMessage } from './getStructuredMessage';
 import type { PoorMansFdc3Agent } from '../fdc3-agent/PoorMansFdc3Agent.js';
 
 const AI_AGENT_ENDPOINT = import.meta.env.VITE_AI_AGENT_ENDPOINT;
+const CHAT_SESSION_STORAGE_KEY = 'mcp-fdc3-chat-session-id';
 
 interface ChatbarProps {
   fdc3Agent: PoorMansFdc3Agent;
+}
+
+function getChatSessionId(): string {
+  const existing = window.sessionStorage.getItem(CHAT_SESSION_STORAGE_KEY);
+  if (existing) {
+    return existing;
+  }
+
+  const created = window.crypto.randomUUID();
+  window.sessionStorage.setItem(CHAT_SESSION_STORAGE_KEY, created);
+  return created;
 }
 
 //TODO - Clean up this component. On a basic level, it works well enough to demonstrate the concept of MCP-FDC3.
@@ -30,7 +42,10 @@ export const Chatbar: React.FC<ChatbarProps> = ({ fdc3Agent }) => {
     try {
       await fetch(AI_AGENT_ENDPOINT, {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: {
+          'content-type': 'application/json',
+          'x-chat-session-id': getChatSessionId(),
+        },
         body: JSON.stringify({ reset: true }),
       });
       setInteractions([]);
@@ -61,6 +76,7 @@ export const Chatbar: React.FC<ChatbarProps> = ({ fdc3Agent }) => {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
+          'x-chat-session-id': getChatSessionId(),
         },
         body: JSON.stringify({
           question
@@ -314,61 +330,111 @@ export const Chatbar: React.FC<ChatbarProps> = ({ fdc3Agent }) => {
             paddingTop: '0.75rem',
             paddingBottom: '0.5rem',
             display: 'flex',
+            flexDirection: 'column',
             gap: '0.5rem',
-            alignItems: 'flex-end',
             zIndex: 30,
             borderTop: '1px solid rgba(255, 255, 255, 0.08)'
           }}>
-            <textarea
-              ref={textareaRef}
-              value={question}
-              onChange={e => setQuestion(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={'Ask e.g. "Get trades for Apple" or "Show me NVDA news"'}
-              style={{ flex: 1, resize: 'none', minHeight: '80px', padding: '0.75rem', fontFamily: 'inherit', background: 'rgb(30, 41, 59)', color: '#f5f5f5', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: 12 }}
-            />
-            <button
-              onClick={toggleListening}
-              style={{
-                background: isListening ? '#dc2626' : '#374151',
-                color: 'white',
-                border: 'none',
-                padding: '0.75rem',
-                borderRadius: '50%',
-                width: '48px',
-                height: '48px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 20,
-                cursor: 'pointer',
-                transition: 'background 0.2s',
-              }}
-              title={isListening ? "Stop Listening" : "Start Voice Input"}
-            >
-              🎤
-            </button>
-            <button
-              onClick={sendQuestion}
-              disabled={loading || !question.trim()}
-              style={{
-                background: '#2563eb',
-                color: 'white',
-                border: 'none',
-                padding: '0.75rem 1rem',
-                borderRadius: '20%',
-                width: '56px',
-                height: '56px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 20,
-                cursor: loading ? 'not-allowed' : 'pointer'
-              }}
-              title="Send"
-            >
-              &#9654;
-            </button>
+            <div style={{
+              display: 'flex',
+              gap: '0.5rem',
+              overflowX: 'auto',
+              paddingBottom: '0.25rem',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              WebkitOverflowScrolling: 'touch'
+            }}>
+              {[
+                "Get trades for Apple",
+                "Show me NVDA news",
+                "Stage a limit buy for 100 MSFT at $412"
+              ].map((text, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setQuestion(text);
+                    // Optionally auto-send, but let's just populate the field for now.
+                  }}
+                  style={{
+                    background: 'rgba(37, 99, 235, 0.15)',
+                    color: '#93c5fd',
+                    border: '1px solid rgba(37, 99, 235, 0.3)',
+                    padding: '0.4rem 0.8rem',
+                    borderRadius: '16px',
+                    fontSize: '0.75rem',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.background = 'rgba(37, 99, 235, 0.25)';
+                    e.currentTarget.style.borderColor = 'rgba(37, 99, 235, 0.5)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.background = 'rgba(37, 99, 235, 0.15)';
+                    e.currentTarget.style.borderColor = 'rgba(37, 99, 235, 0.3)';
+                  }}
+                >
+                  {text}
+                </button>
+              ))}
+            </div>
+            <div style={{
+              display: 'flex',
+              gap: '0.5rem',
+              alignItems: 'flex-end',
+            }}>
+              <textarea
+                ref={textareaRef}
+                value={question}
+                onChange={e => setQuestion(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={'Ask e.g. "Get trades for Apple" or "Show me NVDA news"'}
+                style={{ flex: 1, resize: 'none', minHeight: '80px', padding: '0.75rem', fontFamily: 'inherit', background: 'rgb(30, 41, 59)', color: '#f5f5f5', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: 12 }}
+              />
+              <button
+                onClick={toggleListening}
+                style={{
+                  background: isListening ? '#dc2626' : '#374151',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.75rem',
+                  borderRadius: '50%',
+                  width: '48px',
+                  height: '48px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 20,
+                  cursor: 'pointer',
+                  transition: 'background 0.2s',
+                }}
+                title={isListening ? "Stop Listening" : "Start Voice Input"}
+              >
+                🎤
+              </button>
+              <button
+                onClick={sendQuestion}
+                disabled={loading || !question.trim()}
+                style={{
+                  background: '#2563eb',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '20%',
+                  width: '56px',
+                  height: '56px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 20,
+                  cursor: loading ? 'not-allowed' : 'pointer'
+                }}
+                title="Send"
+              >
+                &#9654;
+              </button>
+            </div>
           </div>
         </div>
       </div>

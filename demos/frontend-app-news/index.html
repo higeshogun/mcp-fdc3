@@ -409,7 +409,7 @@
                 const isMatch = fdc3Ticker && a.ticker && a.ticker.toUpperCase() === fdc3Ticker;
                 const isDimmed = fdc3Ticker && !isMatch;
                 const extra = isMatch ? ' fdc3-highlight' : isDimmed ? ' dimmed' : '';
-                return `<div class="card${extra}" id="card-${a.id}" style="--accent:${ACCENT[a.sentiment]}" onclick="window.parent.postMessage({source:'mcp-fdc3-app',type:'navigateAndRaiseIntent',targetTab:'blotter',intent:'ViewInstrument',context:{type:'fdc3.instrument',name:'${a.ticker || ''}',id:{ticker:'${a.ticker || ''}'}}},'*')">
+                return `<div class="card${extra}" id="card-${a.id}" style="--accent:${ACCENT[a.sentiment]}" onclick="window.parent.postMessage({source:'mcp-fdc3-app',type:'navigateAndRaiseIntent',targetTab:'blotter',intent:'ViewInstrument',context:{type:'fdc3.instrument',name:'${a.ticker || ''}',id:{ticker:'${a.ticker || ''}'}}},window.location.origin)">
       <div class="card-top"><div class="headline">${a.headline}</div><div class="time-ago">${timeStr(a.mins)}</div></div>
       <div class="card-meta">
         <span class="source">${a.source}</span>
@@ -423,6 +423,7 @@
         }
 
         window.addEventListener('message', event => {
+            if (event.origin !== window.location.origin) return;
             const msg = event.data;
             if (!msg || msg.source !== 'mcp-fdc3-platform') return;
             console.log('%c[News] FDC3 message', 'color:#d29922;font-weight:bold;', msg);

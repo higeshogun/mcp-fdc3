@@ -13,7 +13,7 @@ export const clearFilters = async (_args: Record<string, never>): Promise<any> =
 
     return {
         content: [
-            { type: 'text', text: 'Filters cleared across all panels.' },
+            { type: 'text', text: 'Successfully broadcasted an FDC3 ClearFilter intent. All panels (Blotter, News, Watchlist) have been reset to their default unfiltered state. Inform the user that the workspace is cleared.' },
             fdc3Resource,
         ],
     };

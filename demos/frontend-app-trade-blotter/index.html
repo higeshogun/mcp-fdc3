@@ -613,7 +613,7 @@
         targetTab,               // 'news' | 'watchlist'
         intent: 'ViewInstrument',
         context,
-      }, '*');
+      }, window.location.origin);
       showToast(targetTab, ticker);
     }
 
@@ -669,6 +669,7 @@
 
     // ── FDC3 inbound: respond to platform raiseIntent ──────────────────────
     window.addEventListener('message', event => {
+      if (event.origin !== window.location.origin) return;
       const msg = event.data;
       if (!msg || msg.source !== 'mcp-fdc3-platform') return;
       console.log('%c[Trade Blotter] FDC3 message', 'color:#8a2be2;font-weight:bold;', msg);

@@ -77,6 +77,14 @@ case "$AI_PROVIDER" in
     ;;
 esac
 
+if ! command -v openssl &>/dev/null; then
+  echo "ERROR: openssl is required to generate the MCP shared bearer token."
+  exit 1
+fi
+
+MCP_SERVER_AUTH_TOKEN="${MCP_SERVER_AUTH_TOKEN:-$(openssl rand -hex 32)}"
+AI_AGENT_ENV_VARS="${AI_AGENT_ENV_VARS},MCP_SERVER_AUTH_TOKEN=${MCP_SERVER_AUTH_TOKEN}"
+
 if ! command -v gcloud &>/dev/null; then
   echo "ERROR: gcloud CLI not found. Install it from https://cloud.google.com/sdk/docs/install"
   exit 1
@@ -138,6 +146,7 @@ gcloud run deploy mcp-fdc3-mcp-server \
   --cpu=1 \
   --timeout=60 \
   --cpu-boost \
+  --set-env-vars="MCP_SERVER_AUTH_TOKEN=${MCP_SERVER_AUTH_TOKEN}" \
   --quiet
 
 MCP_SERVER_URL=$(gcloud run services describe mcp-fdc3-mcp-server \
