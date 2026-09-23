@@ -17,6 +17,9 @@
 **/*.sln
 **/*.sw?
 **/.env
+.claude/
+.codex/
+*.ps1
 
 # mcp-fdc3 (root)
 # ---------------

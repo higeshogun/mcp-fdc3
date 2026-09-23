@@ -48,6 +48,27 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #30363d transparent;
+  max-width: 100%;
+}
+
+.launcher-menu::-webkit-scrollbar {
+  height: 4px;
+}
+
+.launcher-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.launcher-menu::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 2px;
+}
+
+.launcher-menu::-webkit-scrollbar-thumb:hover {
+  background: #58a6ff;
 }
 
 .launcher-title {
@@ -57,6 +78,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  white-space: nowrap;
 }
 
 .launcher-btn {
@@ -91,7 +113,7 @@
 }
 
 .chat-panel {
-  overflow: auto;
+  overflow: hidden;
   background: #14181f;
 }
 

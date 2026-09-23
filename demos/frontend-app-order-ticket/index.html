@@ -532,7 +532,7 @@
             if (!msg || msg.source !== 'mcp-fdc3-platform') return;
 
             if (msg.type === 'raiseIntent') {
-                if (msg.intent === 'SubmitOrder' && msg.context?.type === 'fdc3.order') {
+                if ((msg.intent === 'SubmitOrder' || msg.intent === 'StageOrder' || msg.intent === 'CreateOrder') && msg.context?.type === 'fdc3.order') {
                     const details = msg.context.details || {};
                     if (details.ticker) {
                         document.getElementById('ticker-input').value = details.ticker;
@@ -543,7 +543,15 @@
                     if (details.type) setOrderType(details.type.toUpperCase());
                     if (details.price && details.type.toUpperCase() === 'LIMIT') document.getElementById('limit-input').value = details.price;
 
-                    document.getElementById('fdc3-banner-label').textContent = `🔵 FDC3 SubmitOrder staged for ${details.ticker}`;
+                    const shouldExecute = (msg.intent === 'SubmitOrder' && details.execute !== false);
+                    if (shouldExecute) {
+                        document.getElementById('fdc3-banner-label').textContent = `🟢 FDC3 Executing: ${details.side?.toUpperCase() || 'BUY'} ${details.quantity || ''} ${details.ticker || ''}`;
+                        setTimeout(() => {
+                            submitOrder();
+                        }, 250);
+                    } else {
+                        document.getElementById('fdc3-banner-label').textContent = `🔵 FDC3 Staged Order: ${details.side?.toUpperCase() || 'BUY'} ${details.quantity || '100'} ${details.ticker || ''} (Ready for review)`;
+                    }
                     const banner = document.getElementById('fdc3-banner');
                     banner.classList.add('visible');
                     setTimeout(() => banner.classList.remove('visible'), 4000);

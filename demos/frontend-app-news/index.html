@@ -395,8 +395,32 @@
             const h = Math.floor(m / 60), r = m % 60;
             return r ? `${h}h ${r}m ago` : `${h}h ago`;
         }
-        function setFilter(f, btn) { activeFilter = f; document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); render(); }
-        function clearFdc3Filter() { fdc3Ticker = null; document.getElementById('fdc3-banner').classList.remove('visible'); render(); }
+        function setFilter(f, btn) {
+            activeFilter = f;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            if (btn) {
+                btn.classList.add('active');
+            } else {
+                const targetBtn = Array.from(document.querySelectorAll('.filter-btn')).find(b => {
+                    const text = b.textContent.trim().toLowerCase();
+                    if (f === 'all') return text === 'all';
+                    if (f === 'positive') return text.includes('bullish');
+                    if (f === 'negative') return text.includes('bearish');
+                    return text === f.toLowerCase();
+                });
+                if (targetBtn) targetBtn.classList.add('active');
+            }
+            render();
+        }
+
+        function clearFdc3Filter() {
+            fdc3Ticker = null;
+            activeFilter = 'all';
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.textContent.trim() === 'All'));
+            document.getElementById('fdc3-banner').classList.remove('visible');
+            render();
+        }
+
         function render() {
             const articles = ARTICLES.filter(a => {
                 if (activeFilter === 'all') return true;
@@ -430,12 +454,34 @@
             if (msg.type === 'raiseIntent') {
                 const ctx = msg.context;
                 let ticker = ctx?.id?.ticker || ctx?.ticker || ctx?.symbol || ctx?.instruments?.[0]?.id?.ticker || null;
+                const sentiment = ctx?.sentiment || ctx?.sentimentFilter;
+                const topic = ctx?.topic || ctx?.topicFilter;
+
+                let filterChanged = false;
+                if (sentiment) {
+                    const norm = String(sentiment).toLowerCase();
+                    const target = norm.includes('bear') || norm.includes('neg') ? 'negative'
+                                 : norm.includes('bull') || norm.includes('pos') ? 'positive'
+                                 : 'all';
+                    setFilter(target);
+                    filterChanged = true;
+                } else if (topic) {
+                    const norm = String(topic).toLowerCase();
+                    setFilter(norm);
+                    filterChanged = true;
+                }
+
                 if (ticker) {
                     fdc3Ticker = ticker.toUpperCase();
-                    document.getElementById('fdc3-banner-label').textContent = `🔵 FDC3 ${msg.intent || 'context'} — showing news for ${fdc3Ticker}`;
+                    const sentLabel = sentiment ? ` [${sentiment.toUpperCase()}]` : '';
+                    document.getElementById('fdc3-banner-label').textContent = `🔵 FDC3 ${msg.intent || 'ViewInstrument'} — showing news for ${fdc3Ticker}${sentLabel}`;
                     document.getElementById('fdc3-banner').classList.add('visible');
                     render();
                     setTimeout(() => { const el = document.querySelector('.card.fdc3-highlight'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
+                } else if (filterChanged) {
+                    const filterLabel = sentiment ? `${sentiment.toUpperCase()} sentiment` : `${topic.toUpperCase()} topic`;
+                    document.getElementById('fdc3-banner-label').textContent = `🔵 FDC3 Filter — displaying ${filterLabel} news`;
+                    document.getElementById('fdc3-banner').classList.add('visible');
                 }
             }
             if (msg.intent === 'ClearFilter') { clearFdc3Filter(); }

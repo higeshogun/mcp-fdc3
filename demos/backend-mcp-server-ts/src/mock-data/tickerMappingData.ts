@@ -34,6 +34,26 @@ export const tickerMappingData = [
   {
     name: 'Tesla Inc',
     ticker: 'TSLA'
+  },
+  {
+    name: 'JPMorgan Chase & Co',
+    ticker: 'JPM'
+  },
+  {
+    name: 'Goldman Sachs Group',
+    ticker: 'GS'
+  },
+  {
+    name: 'Visa Inc',
+    ticker: 'V'
+  },
+  {
+    name: 'Eli Lilly & Co',
+    ticker: 'LLY'
+  },
+  {
+    name: 'Netflix Inc',
+    ticker: 'NFLX'
   }
 ];
 

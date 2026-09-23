@@ -1,5 +1,6 @@
 
 import { type DesktopAgent, type AppIdentifier, type AppIntent, type AppMetadata, type Channel, type Context, type ContextHandler, type ContextType, type EventHandler, type ImplementationMetadata, type Intent, type IntentHandler, type IntentResolution, type Listener, type PrivateChannel, ResolveError } from '@finos/fdc3';
+import { generateUUID } from '../utils/uuid';
 
 export interface Fdc3PostMessage {
   source: 'mcp-fdc3-platform';
@@ -79,7 +80,7 @@ export class PoorMansFdc3Agent implements DesktopAgent {
   }
 
   async findInstances(app: AppIdentifier): Promise<AppIdentifier[]> {
-    return [{ appId: app.appId, instanceId: window.crypto?.randomUUID() }];
+    return [{ appId: app.appId, instanceId: generateUUID() }];
   }
 
   // ── DesktopAgent — stubs ────────────────────────────────────────────────

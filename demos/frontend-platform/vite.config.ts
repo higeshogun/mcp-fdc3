@@ -35,7 +35,67 @@ export default defineConfig({
     },
   ],
   server: {
+    host: true,
     port: 8080,
     strictPort: true,
+    allowedHosts: true,
+    proxy: {
+      '/api/whisper': {
+        target: 'https://whisper.kumatech.net/v1',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/whisper/, ''),
+        secure: false,
+      },
+      '/api/llm': {
+        target: 'https://myllm.kumatech.net/v1',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/llm/, ''),
+        secure: false,
+      },
+      '/api/tts': {
+        target: 'https://tts.kumatech.net/v1',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/tts/, ''),
+        secure: false,
+      },
+      '/api/hf-s2s': {
+        target: 'https://api-inference.huggingface.co',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/hf-s2s/, ''),
+        secure: false,
+      },
+    },
+  },
+  preview: {
+    host: true,
+    port: 8080,
+    strictPort: true,
+    allowedHosts: true,
+    proxy: {
+      '/api/whisper': {
+        target: 'https://whisper.kumatech.net/v1',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/whisper/, ''),
+        secure: false,
+      },
+      '/api/llm': {
+        target: 'https://myllm.kumatech.net/v1',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/llm/, ''),
+        secure: false,
+      },
+      '/api/tts': {
+        target: 'https://tts.kumatech.net/v1',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/tts/, ''),
+        secure: false,
+      },
+      '/api/hf-s2s': {
+        target: 'https://api-inference.huggingface.co',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/hf-s2s/, ''),
+        secure: false,
+      },
+    },
   },
 });

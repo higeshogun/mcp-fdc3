@@ -433,6 +433,17 @@
       color: #3fb950
     }
 
+    .action-btn.cancel {
+      border-color: rgba(248, 81, 73, 0.4);
+      color: #f85149;
+    }
+
+    .action-btn.cancel:hover {
+      background: rgba(248, 81, 73, 0.15);
+      border-color: #f85149;
+      color: #ff7b72;
+    }
+
     footer {
       background: #161b22;
       border-top: 1px solid #21262d;
@@ -666,6 +677,7 @@
         <td style="color:#8b949e;font-size:11px">${t.trader}</td>
         <td>
           <div class="row-actions">
+            ${t.status === 'PENDING' ? `<button class="action-btn cancel" onclick="event.stopPropagation();cancelOrder('${t.id}')">🚫 Cancel</button>` : ''}
             <button class="action-btn news" onclick="event.stopPropagation();sendFdc3Action('${t.ticker}','${t.company.replace(/'/g, "\\'")}','news')">📰 News</button>
             <button class="action-btn watchlist" onclick="event.stopPropagation();sendFdc3Action('${t.ticker}','${t.company.replace(/'/g, "\\'")}','watchlist')">📊 Watchlist</button>
           </div>
@@ -680,6 +692,19 @@
 
     function selectRow(id) { selectedId = id === selectedId ? null : id; renderTable(); }
 
+    function cancelOrder(id, event) {
+      if (event) event.stopPropagation();
+      const order = ORDERS.find(o => o.id === id);
+      if (order && order.status === 'PENDING') {
+        order.status = 'CANCELLED';
+        fdc3Ticker = order.ticker;
+        document.getElementById('fdc3-banner-label').textContent = `🚫 Cancelled pending order ${order.id} (${order.side} ${order.qty} ${order.ticker})`;
+        document.getElementById('fdc3-banner').classList.add('visible');
+        showToast(`Cancelled order ${order.id} (${order.ticker})`, '🚫');
+        renderTable();
+      }
+    }
+
     function clearFdc3Filter() {
       fdc3Ticker = null;
       document.getElementById('fdc3-banner').classList.remove('visible');
@@ -693,31 +718,76 @@
       if (msg.type === 'raiseIntent') {
         const ctx = msg.context;
         let ticker = ctx?.id?.ticker || ctx?.ticker || ctx?.symbol || ctx?.instruments?.[0]?.id?.ticker || null;
-        if (ticker) {
+        if (ticker && msg.intent !== 'CancelOrder') {
           fdc3Ticker = ticker.toUpperCase();
           document.getElementById('fdc3-banner-label').textContent = `🔵 FDC3 ${msg.intent || 'context'} — filtered to ${fdc3Ticker}`;
           document.getElementById('fdc3-banner').classList.add('visible');
           renderTable();
         }
       }
-      if (msg.intent === 'RecordNewOrder' && msg.context?.details) {
+
+      // Handle CancelOrder intent (via voice or WebMCP)
+      if (msg.intent === 'CancelOrder') {
+        const d = msg.context?.details || {};
+        let order = null;
+        if (d.orderId) {
+          order = ORDERS.find(o => o.id.toUpperCase() === d.orderId.toUpperCase() && o.status === 'PENDING');
+        } else if (d.ticker) {
+          const upper = d.ticker.toUpperCase();
+          order = ORDERS.find(o => o.ticker.toUpperCase() === upper && o.status === 'PENDING');
+        } else {
+          order = ORDERS.find(o => o.status === 'PENDING');
+        }
+
+        if (order) {
+          order.status = 'CANCELLED';
+          fdc3Ticker = order.ticker;
+          document.getElementById('fdc3-banner-label').textContent = `🚫 Cancelled pending order ${order.id} (${order.side} ${order.qty} ${order.ticker})`;
+          document.getElementById('fdc3-banner').classList.add('visible');
+          showToast(`Cancelled order ${order.id} (${order.ticker})`, '🚫');
+          renderTable();
+        } else {
+          document.getElementById('fdc3-banner-label').textContent = `ℹ️ No matching pending order found to cancel`;
+          document.getElementById('fdc3-banner').classList.add('visible');
+        }
+      }
+
+      // Handle RecordNewOrder / voice SubmitOrder
+      if ((msg.intent === 'RecordNewOrder' || (msg.intent === 'SubmitOrder' && msg.context?.details?.execute !== false)) && msg.context?.details) {
         const d = msg.context.details;
-        const newOrder = {
-          id: 'O' + Math.floor(Math.random() * 1000).toString().padStart(3, '0'),
-          time: d.time,
-          ticker: d.ticker.toUpperCase(),
-          company: d.ticker.toUpperCase(),
-          side: d.side.toUpperCase(),
-          type: d.type ? d.type.toUpperCase() : 'MARKET',
-          qty: d.qty,
-          price: d.price,
-          notional: d.qty * d.price,
-          pnl: 0,
-          status: (d.type === 'LIMIT' ? 'PENDING' : 'FILLED'),
-          trader: 'D. Novavi'
-        };
-        ORDERS.unshift(newOrder);
-        renderTable();
+        const now = new Date();
+        const dateStr = now.toISOString().split('T')[0];
+        const timeStr = now.toLocaleTimeString('en-US', { hour12: false });
+        const qty = Number(d.qty || d.quantity || 100);
+        const ticker = String(d.ticker || 'AAPL').toUpperCase();
+        const side = String(d.side || 'BUY').toUpperCase();
+        const type = String(d.type || 'MARKET').toUpperCase();
+        const price = Number(d.price || (ORDERS.find(o => o.ticker === ticker)?.price || 150.0));
+
+        // Deduplicate in case both OrderTicket and SubmitOrder trigger within 1.5s
+        const isDuplicate = ORDERS.slice(0, 3).some(o => o.ticker === ticker && o.side === side && o.qty === qty && Math.abs(new Date(o.time).getTime() - now.getTime()) < 1500);
+
+        if (!isDuplicate) {
+          const newOrder = {
+            id: 'O' + Math.floor(Math.random() * 1000).toString().padStart(3, '0'),
+            time: d.time || `${dateStr} ${timeStr}`,
+            ticker: ticker,
+            company: d.company || ticker,
+            side: side,
+            type: type,
+            qty: qty,
+            price: price,
+            notional: +(qty * price).toFixed(2),
+            pnl: 0,
+            status: (type === 'LIMIT' ? 'PENDING' : 'FILLED'),
+            trader: 'D. Novavi'
+          };
+          ORDERS.unshift(newOrder);
+          fdc3Ticker = ticker;
+          document.getElementById('fdc3-banner-label').textContent = `🟢 Order ${newOrder.id} submitted: ${newOrder.side} ${newOrder.qty} ${newOrder.ticker} (${newOrder.status})`;
+          document.getElementById('fdc3-banner').classList.add('visible');
+          renderTable();
+        }
       }
       if (msg.intent === 'ClearFilter') { clearFdc3Filter(); }
     });

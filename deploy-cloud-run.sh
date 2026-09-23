@@ -187,6 +187,7 @@ echo "  -> AI Agent: $AI_AGENT_URL"
 
 # ---------- 6. Frontend -------------------------------------------------------
 echo "[6/8] Building and deploying Frontend..."
+npm --prefix demos/frontend-platform run build
 docker build \
   -t "${REGISTRY}/frontend:latest" \
   -f demos/frontend-platform/Dockerfile \

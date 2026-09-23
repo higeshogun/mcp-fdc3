@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import type { ReactPortal } from 'react';
 import { createPortal } from 'react-dom';
 import { GoldenLayout, LayoutConfig, ComponentContainer } from 'golden-layout';
+import { generateUUID } from '../utils/uuid';
 import 'golden-layout/dist/css/goldenlayout-base.css';
 import 'golden-layout/dist/css/themes/goldenlayout-dark-theme.css';
 
@@ -32,7 +33,7 @@ export const GoldenLayoutWrapper: React.FC<GoldenLayoutWrapperProps> = ({ config
       (container: ComponentContainer, itemConfig: any) => {
         const type = itemConfig.componentType as string;
         const props = itemConfig.componentState || {};
-        const id = crypto.randomUUID();
+        const id = generateUUID();
 
         container.stateRequestEvent = () => props;
 

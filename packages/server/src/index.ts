@@ -58,6 +58,19 @@ export function createGenericFdc3Resource(options: CreateFdc3ResourceOptions): F
   };
 }
 
+function getSafeUuid(): string {
+  try {
+    if (typeof globalThis !== 'undefined' && typeof (globalThis as any).crypto?.randomUUID === 'function') {
+      return (globalThis as any).crypto.randomUUID();
+    }
+  } catch {}
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
 /**
  * Creates an fdc3.raiseIntent Fdc3Resource.
  * This is the object that should be included in the 'content' array of a toolResult.
@@ -69,17 +82,6 @@ export function createGenericFdc3Resource(options: CreateFdc3ResourceOptions): F
 export function createFdc3RaiseIntentResource(intent: string,
                                               context: Context,
                                               app?: AppIdentifier): Fdc3Resource {
-  //TODO - There are at least a couple of things to consider here:
-  //1. The fdc3.raiseIntent method would arguably benefit from a having an optional 'firstOrDefault' mechanism.
-  //   When targeting a single running instance of a given app, this would avoid the need to first invoke fdc3.findInstances
-  //   in order to raise the intent on the first instance.
-  //   MCP-FDC3 library could potentially offer 'firstOrDefault' as an additional option e.g. with the client library processing
-  //   the option (only when set) by invoking fdc3.findInstances and then fdc3.raiseIntent. When the option was not set, MCP-FDC3
-  //   client library could simply just invoke fdc3.raiseIntent.
-  //   But a better solution might be to extend the FDC3 API to natively support this functionality. This would avoid the need for
-  //   'special' options in the MCP-FDC3 library, and moreover would make the functionality available to regular client-side app
-  //   code that consumes the FDC3 API.
-  //2. Launching of new instances of target apps - see the comment in the 'createFdc3OpenResource' method below for thoughts on this.
   const fdc3Message: BrowserTypes.RaiseIntentRequest = {
     type: 'raiseIntentRequest',
     payload: {
@@ -88,8 +90,8 @@ export function createFdc3RaiseIntentResource(intent: string,
       intent,
     },
     meta: {
-      requestUuid: (globalThis as any).crypto?.randomUUID(),
-      source: undefined, //TODO - This needs more thought. What does 'originating app identity' actually mean in the context of an intent created by an MCP server and subsequently raised by the platform app?
+      requestUuid: getSafeUuid(),
+      source: undefined,
       timestamp: new Date(),
     },
   };
@@ -112,14 +114,6 @@ export function createFdc3RaiseIntentResource(intent: string,
  */
 export function createFdc3OpenResource(app: AppIdentifier,
                                        context?: Context): Fdc3Resource {
-  //TODO - Explore and discuss what options there are for processing this resource on the client side.
-  //This is important because a frontend app will typically be unable to invoke a window.open without an associated user gesture.
-  //Requiring originating user gestures is one of the mechanisms modern browsers employ to help overcome the 'popup hell' of the earlier 2000s.
-  //Some potential solutions include:
-  //(a) open the new app inside an iframe within the main window
-  //(b) provide the user with a button (or better yet, a thumbnail) allowing them to launch the app in a secondary window
-  //(c) open in iframe as per option (a) but with a button to support tear-off into a secondary window (but be aware this will trigger a reload of the new app)
-  //But any and all solutions should be put on the table.
   const fdc3Message: BrowserTypes.OpenRequest = {
     type: 'openRequest',
     payload: {
@@ -127,8 +121,8 @@ export function createFdc3OpenResource(app: AppIdentifier,
       context,
     },
     meta: {
-      requestUuid: (globalThis as any).crypto?.randomUUID(),
-      source: undefined, //TODO - This needs more thought. What does 'originating app identity' actually mean in the context of an intent created by an MCP server and subsequently raised by the platform app?
+      requestUuid: getSafeUuid(),
+      source: undefined,
       timestamp: new Date(),
     },
   };
@@ -152,12 +146,12 @@ export function createFdc3BroadcastResource(context: Context): Fdc3Resource {
   const fdc3Message: BrowserTypes.BroadcastRequest = {
     type: 'broadcastRequest',
     payload: {
-      channelId: '', //TODO - This needs more thought. If we use generated type from the FDC3 library, it expects a channelId here...
+      channelId: '',
       context,
     },
     meta: {
-      requestUuid: (globalThis as any).crypto?.randomUUID(),
-      source: undefined, //TODO - This needs more thought. What does 'originating app identity' actually mean in the context of an intent created by an MCP server and subsequently raised by the platform app?
+      requestUuid: getSafeUuid(),
+      source: undefined,
       timestamp: new Date(),
     },
   };

@@ -48,51 +48,48 @@ Confirm actions concisely, e.g. "Trades retrieved for Apple Inc." or "Order stag
 `;
 
 
-const getModel = async (): Promise<BaseChatModel> => {
-  console.log(`getModel - creating model for provider: '${AI_PROVIDER}'...`);
+const getModelForRequest = async (headers: any): Promise<BaseChatModel> => {
+  const provider = (headers['x-ai-provider'] || AI_PROVIDER).toLowerCase();
+  const modelName = headers['x-ai-model'] || process.env.OPENAI_MODEL || 'gpt-4o';
+  const baseUrl = headers['x-ai-base-url'];
+  const apiKey = headers['x-ai-api-key'];
 
-  let model: BaseChatModel;
+  console.log(`getModel - creating model for provider: '${provider}', model: '${modelName}'...`);
 
-  switch (AI_PROVIDER) {
+  switch (provider) {
     case 'gemini': {
-      const apiKey = requireEnv('GEMINI_API_KEY');
-      const modelName = requireEnv('GEMINI_MODEL');
-      model = new ChatGoogleGenerativeAI({
+      const effectiveApiKey = apiKey || process.env.GEMINI_API_KEY;
+      if (!effectiveApiKey) throw new Error('Missing Gemini API Key');
+      return new ChatGoogleGenerativeAI({
         model: modelName,
-        apiKey,
+        apiKey: effectiveApiKey,
         temperature: 0,
         maxOutputTokens: 512,
       });
-      break;
     }
 
     case 'ollama': {
-      const modelName = requireEnv('OLLAMA_MODEL');
-      const baseUrl = process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434';
-      model = new ChatOllama({
+      return new ChatOllama({
         model: modelName,
-        baseUrl,
+        baseUrl: baseUrl || process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
         temperature: 0,
       });
-      break;
     }
 
+    case 'custom':
     case 'openai':
     default: {
-      const apiKey = requireEnv('OPENAI_API_KEY');
-      const modelName = requireEnv('OPENAI_MODEL');
-      model = new ChatOpenAI({
+      const effectiveApiKey = apiKey || process.env.OPENAI_API_KEY;
+      if (!effectiveApiKey && provider === 'openai') throw new Error('Missing OpenAI API Key');
+      return new ChatOpenAI({
         model: modelName,
-        openAIApiKey: apiKey,
+        openAIApiKey: effectiveApiKey || 'dummy-key',
+        configuration: baseUrl ? { baseURL: baseUrl } : undefined,
         temperature: 0,
         maxTokens: 512,
       });
-      break;
     }
   }
-
-  console.log(`getModel - model ready (provider: ${AI_PROVIDER})`);
-  return model;
 };
 
 const initHttpClient = async (): Promise<Client> => {
@@ -113,17 +110,23 @@ const initHttpClient = async (): Promise<Client> => {
   return client;
 };
 
-const getAgent = async (model: BaseChatModel): Promise<any> => {
-  console.log('getAgent - started creating agent...');
+// Global MCP tools cache
+let mcpTools: any[] | null = null;
+const getMcpTools = async (): Promise<any[]> => {
+  if (mcpTools) return mcpTools;
   const httpClient = await initHttpClient();
-  const tools = await loadMcpTools(BACKEND_MCP_SERVER_NAME, httpClient);
-  const agent = createAgent({
+  mcpTools = await loadMcpTools(BACKEND_MCP_SERVER_NAME, httpClient);
+  return mcpTools;
+};
+
+const getAgentForRequest = async (headers: any): Promise<any> => {
+  const model = await getModelForRequest(headers);
+  const tools = await getMcpTools();
+  return createAgent({
     model,
     tools,
     systemPrompt: SYSTEM_PROMPT
   });
-  console.log('getAgent - completed creating agent');
-  return agent;
 };
 
 type ChatSessionState = {
@@ -167,11 +170,28 @@ function cleanupExpiredState(now = Date.now()): void {
 }
 
 function isAllowedOrigin(origin: string | undefined): boolean {
-  if (!allowedOrigins) {
+  if (!origin) {
     return true;
   }
 
-  return !!origin && allowedOrigins.has(origin);
+  if (!allowedOrigins || allowedOrigins.has(origin)) {
+    return true;
+  }
+
+  try {
+    const url = new URL(origin);
+    const hostname = url.hostname;
+    return (
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname.startsWith('192.168.') ||
+      hostname.startsWith('10.') ||
+      hostname.startsWith('172.') ||
+      hostname.endsWith('.local')
+    );
+  } catch (e) {
+    return false;
+  }
 }
 
 function isValidSessionId(value: string | undefined): value is string {
@@ -203,17 +223,19 @@ function checkRateLimit(sessionId: string): boolean {
 
 
 console.log(`\nStarting AI agent service (${AI_AGENT_NAME})\n`);
-const model = await getModel();
-const agent = await getAgent(model);
 const app = express();
 const port = Number(process.env.PORT) || 4000;
 
 app.use(cors({
-  origin: FRONTEND_PLATFORM_ORIGIN === '*'
-    ? true
-    : FRONTEND_PLATFORM_ORIGIN.split(',').map(o => o.trim()),
+  origin: (origin, callback) => {
+    if (isAllowedOrigin(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['content-type', 'x-client', 'authorization', SESSION_ID_HEADER],
+  allowedHeaders: ['content-type', 'x-client', 'authorization', SESSION_ID_HEADER, 'x-ai-provider', 'x-ai-model', 'x-ai-base-url', 'x-ai-api-key'],
 }));
 app.use(express.json());
 
@@ -265,6 +287,8 @@ app.post('/api/chat', async (req: Request, res: Response) => {
       session.lastSeenAt = Date.now();
       return res.status(200).json({ status: 'ok', response: { messages: [] } });
     }
+
+    const agent = await getAgentForRequest(req.headers);
 
     session.history.push(new HumanMessage(userPrompt));
     session.history = session.history.slice(-MAX_CHAT_MESSAGES);

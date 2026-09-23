@@ -18,9 +18,12 @@
   "dependencies": {
     "@finos/fdc3": "^2.2.0",
     "@mcp-fdc3/client": "*",
+    "@mcp-fdc3/server": "*",
+    "@modelcontextprotocol/sdk": "^1.21.1",
     "golden-layout": "^2.6.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

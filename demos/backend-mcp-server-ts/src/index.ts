@@ -5,7 +5,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import z from 'zod';
-import { getTrades, getNews, clearFilters, submitOrder, requestQuote } from './tools/index.js';
+import { getTrades, getNews, clearFilters, submitOrder, stageOrder, requestQuote, viewChart } from './tools/index.js';
 
 const app = express();
 const port = Number(process.env.PORT) || 3000;
@@ -74,8 +74,7 @@ app.post('/mcp', async (req, res) => {
       version: '0.1.0',
     });
 
-    // @ts-expect-error type instantiation too deep
-    server.registerTool('getTrades', {
+    (server as any).registerTool('getTrades', {
       title: 'GetTrades',
       description: 'Returns historical trades for a given company and broadcasts an FDC3 fdc3.instrument context via the ViewInstrument intent, targeting the Trade Blotter. Example input: "AAPL". Use this when the user wants to see their trade execution history.',
       inputSchema: {
@@ -83,7 +82,7 @@ app.post('/mcp', async (req, res) => {
       },
     }, getTrades);
 
-    server.registerTool('getNews', {
+    (server as any).registerTool('getNews', {
       title: 'GetNews',
       description: 'Filters the news feed by broadcasting an FDC3 fdc3.instrument context via the ViewInstrument intent, targeting the News App. Use this when the user explicitly queries for recent news, headlines, or articles for a specific company or ticker symbol. Example input: "MSFT".',
       inputSchema: {
@@ -91,16 +90,15 @@ app.post('/mcp', async (req, res) => {
       },
     }, getNews);
 
-    server.registerTool('clearFilters', {
+    (server as any).registerTool('clearFilters', {
       title: 'ClearFilters',
       description: 'Resets the workspace context by broadcasting an FDC3 fdc3.clear context via the ClearFilter intent to all panels (blotter, news, watchlist). Use this when the user says "clear filters", "reset", "show all", or "remove filter".',
       inputSchema: {},
     }, clearFilters);
 
-    // @ts-expect-error type instantiation too deep
-    server.registerTool('submitOrder', {
+    (server as any).registerTool('submitOrder', {
       title: 'SubmitOrder',
-      description: 'Stages a traditional order in the Order Ticket app (Equities or simple instruments). Provide the side (buy/sell), ticker symbol, and optionally quantity (default 100), order type (market/limit), and limit price.',
+      description: 'Submits and executes an order immediately (market orders filled immediately, limit orders placed as pending on the blotter) by broadcasting an FDC3 SubmitOrder intent to the Order Ticket and Orders Blotter. Use this when the user explicitly asks to buy, sell, execute, or place an order right away.',
       inputSchema: {
         side: z.enum(['buy', 'sell']).describe('The side of the order (buy or sell)'),
         ticker: z.string().describe('The ticker symbol, e.g., AAPL, MSFT'),
@@ -110,8 +108,19 @@ app.post('/mcp', async (req, res) => {
       },
     }, submitOrder as any);
 
-    // @ts-expect-error type instantiation too deep
-    server.registerTool('requestQuote', {
+    (server as any).registerTool('stageOrder', {
+      title: 'StageOrder',
+      description: 'Stages and populates an order in the Order Ticket UI without executing it, allowing the trader to review, edit, or confirm quantities, side, and prices before manual submission. Use this when the user asks to stage, prepare, draft, or set up an order (e.g., "Stage an order to buy 100 AAPL", "Prepare a limit buy for 50 TSLA at 240 in the ticket", "Set up an order to sell 20 MSFT", "Stage 100 NVDA").',
+      inputSchema: {
+        ticker: z.string().describe('The ticker symbol or company name, e.g., AAPL, MSFT, NVDA, TSLA'),
+        side: z.enum(['buy', 'sell']).optional().default('buy').describe('The side of the order (buy or sell)'),
+        quantity: z.number().optional().default(100).describe('The number of shares/contracts to stage'),
+        orderType: z.enum(['market', 'limit']).optional().default('market').describe('The type of order (market or limit)'),
+        price: z.number().optional().describe('Optional limit price for limit orders'),
+      },
+    }, stageOrder as any);
+
+    (server as any).registerTool('requestQuote', {
       title: 'RequestQuote',
       description: 'Constructs an FDC3 fdc3.order context and stages an RFQ via the InitiateRFQ intent in the RFQ panel for OTC instruments like FX pairs (e.g. EUR/USD). Use this when the user wants to trade FX or specifically asks to request a quote from dealers. Provide side, quantity, and instrument.',
       inputSchema: {
@@ -120,6 +129,16 @@ app.post('/mcp', async (req, res) => {
         instrument: z.string().describe('The instrument symbol, e.g., EUR/USD'),
       },
     }, requestQuote as any);
+
+    (server as any).registerTool('viewChart', {
+      title: 'ViewChart',
+      description: 'Displays interactive financial charts (candlesticks, line/area, moving averages, volume) for an equity or FX instrument by broadcasting an FDC3 fdc3.instrument context via the ViewChart intent, targeting the Chart panel. Example inputs: "AAPL", "NVDA", "EUR/USD".',
+      inputSchema: {
+        ticker: z.string().describe('Ticker symbol or company name (e.g. AAPL, NVDA, TSLA, MSFT, EUR/USD)'),
+        timeframe: z.enum(['1D', '1W', '1M', '3M', '1Y']).optional().describe('Chart timeframe (e.g. 1D, 1W, 1M, 3M, 1Y)'),
+        chartType: z.enum(['candle', 'line']).optional().describe('Chart style: candle or line'),
+      },
+    }, viewChart as any);
 
     // Connect the server instance to the transport for this session.
     await server.connect(transport);

@@ -197,7 +197,7 @@
 
         .list-header {
             display: grid;
-            grid-template-columns: 1fr 110px 90px 90px 60px;
+            grid-template-columns: 1fr 110px 90px 90px 75px;
             padding: 8px 20px;
             background: #161b22;
             border-bottom: 1px solid #21262d;
@@ -220,12 +220,34 @@
 
         .row {
             display: grid;
-            grid-template-columns: 1fr 110px 90px 90px 60px;
+            grid-template-columns: 1fr 110px 90px 90px 75px;
             padding: 11px 20px;
             border-bottom: 1px solid #161b22;
             cursor: pointer;
             transition: background .12s;
             align-items: center
+        }
+
+        .row-del-btn {
+            background: transparent;
+            border: none;
+            color: #7d8590;
+            font-size: 11px;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+            opacity: 0;
+            transition: opacity .15s, color .15s, background .15s;
+        }
+
+        .row:hover .row-del-btn {
+            opacity: 0.7;
+        }
+
+        .row-del-btn:hover {
+            opacity: 1 !important;
+            color: #f85149;
+            background: rgba(248, 81, 73, 0.15);
         }
 
         .row:hover {
@@ -339,6 +361,107 @@
                 box-shadow: 0 0 0 5px rgba(63, 185, 80, .1)
             }
         }
+
+        .quick-add-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 6px 16px;
+            background: #161b22;
+            border-bottom: 1px solid #21262d;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+
+        .add-input-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 3px 8px;
+            flex: 1;
+            min-width: 200px;
+            max-width: 360px;
+        }
+
+        .add-input-wrap:focus-within {
+            border-color: #58a6ff;
+            box-shadow: 0 0 0 1px #58a6ff;
+        }
+
+        .add-input-wrap svg {
+            color: #7d8590;
+            flex-shrink: 0;
+        }
+
+        .add-input-wrap input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #e6edf3;
+            font-size: 12px;
+            font-family: inherit;
+            width: 100%;
+        }
+
+        .add-input-wrap input::placeholder {
+            color: #6e7681;
+        }
+
+        .add-btn {
+            background: #238636;
+            border: 1px solid rgba(240, 246, 252, 0.1);
+            border-radius: 4px;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 10px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background .15s;
+        }
+
+        .add-btn:hover {
+            background: #2ea043;
+        }
+
+        .quick-chips {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            overflow-x: auto;
+        }
+
+        .chips-label {
+            font-size: 10px;
+            color: #7d8590;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            margin-right: 2px;
+        }
+
+        .chip-btn {
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            color: #c9d1d9;
+            font-size: 11px;
+            font-weight: 500;
+            padding: 2px 8px;
+            cursor: pointer;
+            transition: all .15s;
+            white-space: nowrap;
+        }
+
+        .chip-btn:hover {
+            background: #30363d;
+            color: #58a6ff;
+            border-color: #58a6ff;
+        }
     </style>
 </head>
 
@@ -348,6 +471,23 @@
         <button class="fdc3-clear-btn" onclick="clearFdc3()">✕ Dismiss</button>
     </div>
     <div class="index-bar" id="index-bar"></div>
+    <div class="quick-add-bar">
+        <div class="add-input-wrap">
+            <svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor">
+                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+            </svg>
+            <input type="text" id="add-ticker-input" placeholder="+ Add symbol (e.g. AMD, PLTR, COIN, DIS)..." autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter')handleAddStockFromUI()" />
+            <button class="add-btn" id="add-btn" onclick="handleAddStockFromUI()">+ Add</button>
+        </div>
+        <div class="quick-chips">
+            <span class="chips-label">Suggestions:</span>
+            <button class="chip-btn" onclick="addStockByTicker('AMD', 'Advanced Micro Devices', 142.30)">+ AMD</button>
+            <button class="chip-btn" onclick="addStockByTicker('PLTR', 'Palantir Tech', 44.50)">+ PLTR</button>
+            <button class="chip-btn" onclick="addStockByTicker('COIN', 'Coinbase Global', 245.80)">+ COIN</button>
+            <button class="chip-btn" onclick="addStockByTicker('DIS', 'Walt Disney Co.', 112.40)">+ DIS</button>
+            <button class="chip-btn" onclick="addStockByTicker('ARM', 'ARM Holdings', 134.20)">+ ARM</button>
+        </div>
+    </div>
     <div class="list-wrap">
         <div class="list-header">
             <div class="col-h">Instrument</div>
@@ -406,6 +546,95 @@
             }).join('');
         }
 
+        const KNOWN_NAMES = {
+            'AMD': 'Advanced Micro Devices',
+            'PLTR': 'Palantir Tech Inc.',
+            'COIN': 'Coinbase Global Inc.',
+            'DIS': 'Walt Disney Co.',
+            'ARM': 'ARM Holdings plc',
+            'UBER': 'Uber Technologies',
+            'BABA': 'Alibaba Group',
+            'INTC': 'Intel Corporation',
+            'CRM': 'Salesforce Inc.',
+            'ORCL': 'Oracle Corporation',
+            'IBM': 'IBM Corporation',
+            'BA': 'Boeing Co.',
+            'PYPL': 'PayPal Holdings',
+            'SQ': 'Block Inc.',
+            'SNAP': 'Snap Inc.',
+            'SPOT': 'Spotify Technology'
+        };
+
+        function addStockByTicker(rawTicker, companyName, initialPrice) {
+            if (!rawTicker) return;
+            const ticker = rawTicker.trim().toUpperCase();
+            if (!ticker) return;
+
+            const existing = STOCKS.find(s => s.ticker.toUpperCase() === ticker);
+            if (existing) {
+                fdc3Ticker = ticker;
+                document.getElementById('fdc3-banner-label').textContent = `ℹ️ ${ticker} is already in Watchlist`;
+                document.getElementById('fdc3-banner').classList.add('visible');
+                renderRows();
+                const el = document.getElementById(`row-${ticker}`);
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+
+            const name = companyName || KNOWN_NAMES[ticker] || `${ticker} Inc.`;
+            const basePrice = initialPrice || (ticker === 'COIN' ? 245.80 : ticker === 'AMD' ? 142.30 : ticker === 'PLTR' ? 44.50 : +(Math.random() * 200 + 40).toFixed(2));
+            const chgPct = +(Math.random() * 5 - 1.5).toFixed(2);
+            const chg = +((basePrice * chgPct) / 100).toFixed(2);
+            const days = [
+                +(basePrice * 0.96).toFixed(2),
+                +(basePrice * 0.97).toFixed(2),
+                +(basePrice * 0.99).toFixed(2),
+                +(basePrice * 0.98).toFixed(2),
+                +(basePrice * 1.01).toFixed(2),
+                +(basePrice * 1.00).toFixed(2),
+                basePrice
+            ];
+
+            STOCKS.unshift({
+                ticker: ticker,
+                company: name,
+                price: basePrice,
+                chg: chg,
+                chgPct: chgPct,
+                vol: (Math.random() * 25 + 5).toFixed(1) + 'M',
+                days: days
+            });
+
+            fdc3Ticker = ticker;
+            document.getElementById('fdc3-banner-label').textContent = `🟢 Added ${ticker} to Watchlist`;
+            document.getElementById('fdc3-banner').classList.add('visible');
+            renderRows();
+
+            setTimeout(() => {
+                const el = document.getElementById(`row-${ticker}`);
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+        }
+
+        function handleAddStockFromUI() {
+            const input = document.getElementById('add-ticker-input');
+            const val = input.value.trim();
+            if (!val) return;
+            addStockByTicker(val);
+            input.value = '';
+        }
+
+        function removeStock(ticker, event) {
+            if (event) event.stopPropagation();
+            const upper = ticker.toUpperCase();
+            const idx = STOCKS.findIndex(s => s.ticker.toUpperCase() === upper);
+            if (idx !== -1) {
+                STOCKS.splice(idx, 1);
+                if (fdc3Ticker === upper) fdc3Ticker = null;
+                renderRows();
+            }
+        }
+
         function renderRows() {
             document.getElementById('rows').innerHTML = STOCKS.map(s => {
                 const pos = s.chg >= 0;
@@ -416,7 +645,10 @@
       <div class="price-cell">$${s.price.toFixed(2)}</div>
       <div class="chg-cell ${pos ? 'pos' : 'neg'}">${pos ? '+' : ''}${s.chgPct.toFixed(2)}%<br><span style="font-size:11px;font-weight:400">${pos ? '+' : ''}$${Math.abs(s.chg).toFixed(2)}</span></div>
       <div class="vol-cell">${s.vol}</div>
-      <div>${sparkPath(s.days, color)}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:4px;">
+        ${sparkPath(s.days, color)}
+        <button class="row-del-btn" title="Remove ${s.ticker}" onclick="removeStock('${s.ticker}', event)">✕</button>
+      </div>
     </div>`;
             }).join('');
             document.getElementById('last-upd').textContent = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -456,8 +688,31 @@
             if (msg.type === 'raiseIntent') {
                 const ctx = msg.context;
                 let ticker = ctx?.id?.ticker || ctx?.ticker || ctx?.symbol || ctx?.instruments?.[0]?.id?.ticker || null;
+                
                 if (ticker) {
-                    fdc3Ticker = ticker.toUpperCase();
+                    ticker = ticker.toUpperCase();
+
+                    // 1. AddWatchlist intent
+                    if (msg.intent === 'AddWatchlist') {
+                        addStockByTicker(ticker, ctx?.name, ctx?.price);
+                        return;
+                    }
+
+                    // 2. RemoveWatchlist intent
+                    if (msg.intent === 'RemoveWatchlist') {
+                        const idx = STOCKS.findIndex(s => s.ticker.toUpperCase() === ticker);
+                        if (idx !== -1) {
+                            STOCKS.splice(idx, 1);
+                        }
+                        if (fdc3Ticker === ticker) fdc3Ticker = null;
+                        document.getElementById('fdc3-banner-label').textContent = `🔴 FDC3 RemoveWatchlist — Removed ${ticker} from Watchlist`;
+                        document.getElementById('fdc3-banner').classList.add('visible');
+                        renderRows();
+                        return;
+                    }
+
+                    // 3. Regular ViewInstrument intent
+                    fdc3Ticker = ticker;
                     document.getElementById('fdc3-banner-label').textContent = `🔵 FDC3 ${msg.intent || 'context'} — highlighting ${fdc3Ticker}`;
                     document.getElementById('fdc3-banner').classList.add('visible');
                     renderRows();

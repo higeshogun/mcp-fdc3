@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Financial Chart — MCP-FDC3 Demo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0d1117;
+            color: #e6edf3;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* ── Header ─────────────────────────────────────── */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            height: 48px;
+            background: #161b22;
+            border-bottom: 1px solid #30363d;
+            flex-shrink: 0;
+            gap: 12px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .app-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 6px;
+            padding: 3px 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #38bdf8;
+            white-space: nowrap;
+        }
+
+        .fdc3-tag {
+            font-size: 11px;
+            font-weight: 600;
+            color: #7d8590;
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            padding: 2px 6px;
+            white-space: nowrap;
+        }
+
+        .instrument-info {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .ticker-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #f0f6fc;
+        }
+
+        .company-name {
+            font-size: 11px;
+            color: #8b949e;
+            display: inline-block;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .price-display {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .current-price {
+            font-size: 16px;
+            font-weight: 700;
+            color: #f0f6fc;
+            font-variant-numeric: tabular-nums;
+            transition: color 0.2s;
+        }
+
+        .price-change {
+            font-size: 12px;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .price-change.pos {
+            color: #3fb950;
+        }
+
+        .price-change.neg {
+            color: #f85149;
+        }
+
+        /* ── FDC3 Notification Banner ───────────────────── */
+        .fdc3-banner {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 16px;
+            background: rgba(56, 189, 248, 0.12);
+            border-bottom: 1px solid rgba(56, 189, 248, 0.25);
+            font-size: 11px;
+            color: #38bdf8;
+            flex-shrink: 0;
+        }
+
+        .fdc3-banner.visible {
+            display: flex;
+            animation: bannerIn 0.25s ease;
+        }
+
+        @keyframes bannerIn {
+            from {
+                opacity: 0;
+                transform: translateY(-4px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .banner-clear {
+            background: transparent;
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            color: #38bdf8;
+            border-radius: 4px;
+            padding: 1px 6px;
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        .banner-clear:hover {
+            background: rgba(56, 189, 248, 0.2);
+        }
+
+        /* ── Controls Toolbar ───────────────────────────── */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 12px;
+            background: #11161d;
+            border-bottom: 1px solid #21262d;
+            font-size: 11px;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-group {
+            display: flex;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 5px;
+            padding: 1px;
+        }
+
+        .tool-btn {
+            background: transparent;
+            border: none;
+            color: #8b949e;
+            font-size: 11px;
+            font-weight: 500;
+            padding: 3px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .tool-btn:hover {
+            color: #f0f6fc;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tool-btn.active {
+            color: #38bdf8;
+            background: #21262d;
+            font-weight: 600;
+        }
+
+        .ticker-pills {
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+            max-width: 320px;
+            scrollbar-width: none;
+        }
+
+        .ticker-pills::-webkit-scrollbar {
+            display: none;
+        }
+
+        .ticker-pill {
+            background: #161b22;
+            border: 1px solid #30363d;
+            color: #8b949e;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s;
+        }
+
+        .ticker-pill:hover {
+            color: #f0f6fc;
+            border-color: #8b949e;
+        }
+
+        .ticker-pill.active {
+            color: #38bdf8;
+            border-color: #38bdf8;
+            background: rgba(56, 189, 248, 0.1);
+        }
+
+        /* ── Metric Bar ─────────────────────────────────── */
+        .metric-bar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 4px 16px;
+            background: #0d1117;
+            border-bottom: 1px solid #1f242c;
+            font-size: 11px;
+            color: #7d8590;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .metric-item span {
+            color: #c9d1d9;
+            font-weight: 500;
+            margin-left: 4px;
+        }
+
+        /* ── Chart Area ─────────────────────────────────── */
+        .chart-container {
+            flex: 1;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            min-height: 150px;
+            background: #0d1117;
+            overflow: hidden;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* ── Floating Tooltip ───────────────────────────── */
+        .chart-tooltip {
+            position: absolute;
+            display: none;
+            pointer-events: none;
+            background: rgba(22, 27, 34, 0.95);
+            border: 1px solid #30363d;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 10px;
+            color: #c9d1d9;
+            z-index: 10;
+            line-height: 1.5;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .chart-tooltip .tt-date {
+            color: #8b949e;
+            font-weight: 600;
+            margin-bottom: 2px;
+            border-bottom: 1px solid #30363d;
+            padding-bottom: 2px;
+        }
+
+        .chart-tooltip .tt-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .chart-tooltip .tt-label {
+            color: #7d8590;
+        }
+
+        /* ── Footer ─────────────────────────────────────── */
+        footer {
+            height: 24px;
+            background: #161b22;
+            border-top: 1px solid #30363d;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            font-size: 10px;
+            color: #7d8590;
+            flex-shrink: 0;
+        }
+
+        .pulse-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #3fb950;
+            margin-right: 5px;
+            box-shadow: 0 0 4px #3fb950;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-left">
+            <div class="app-badge">📈 Chart</div>
+            <div class="fdc3-tag">FDC3 2.0</div>
+            <div class="instrument-info">
+                <span class="ticker-name" id="display-ticker">AAPL</span>
+                <span class="company-name" id="display-name">Apple Inc.</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="price-display">
+                <span class="current-price" id="display-price">$228.40</span>
+                <span class="price-change pos" id="display-chg">+3.15 (+1.40%)</span>
+            </div>
+            <button class="tool-btn" id="broadcast-btn" onclick="broadcastCurrentInstrument()" title="Broadcast ViewInstrument to workspace">
+                📡 Sync
+            </button>
+        </div>
+    </header>
+
+    <!-- FDC3 Inbound Banner -->
+    <div class="fdc3-banner" id="fdc3-banner">
+        <span id="fdc3-banner-label">🔵 FDC3 ViewChart — AAPL</span>
+        <button class="banner-clear" onclick="clearFdc3Filter()">Clear</button>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="toolbar-group">
+            <div class="btn-group">
+                <button class="tool-btn active" id="btn-candle" onclick="setChartType('candle')">Candles</button>
+                <button class="tool-btn" id="btn-line" onclick="setChartType('line')">Line</button>
+            </div>
+            <div class="btn-group" style="margin-left: 6px;">
+                <button class="tool-btn" onclick="setTimeframe('1D', this)">1D</button>
+                <button class="tool-btn" onclick="setTimeframe('1W', this)">1W</button>
+                <button class="tool-btn active" onclick="setTimeframe('1M', this)">1M</button>
+                <button class="tool-btn" onclick="setTimeframe('3M', this)">3M</button>
+                <button class="tool-btn" onclick="setTimeframe('1Y', this)">1Y</button>
+            </div>
+        </div>
+
+        <div class="toolbar-group">
+            <div class="btn-group">
+                <button class="tool-btn active" id="btn-ema" onclick="toggleIndicator('ema')">EMA 20/50</button>
+                <button class="tool-btn active" id="btn-vol" onclick="toggleIndicator('vol')">Vol</button>
+            </div>
+            <div class="ticker-pills" id="quick-tickers"></div>
+        </div>
+    </div>
+
+    <!-- Metric Bar -->
+    <div class="metric-bar">
+        <div class="metric-item">O:<span id="metric-open">$225.25</span></div>
+        <div class="metric-item">H:<span id="metric-high">$229.10</span></div>
+        <div class="metric-item">L:<span id="metric-low">$224.80</span></div>
+        <div class="metric-item">Vol:<span id="metric-vol">48.2M</span></div>
+        <div class="metric-item" id="metric-ema20" style="color: #e3b341;">EMA20:<span>$224.12</span></div>
+        <div class="metric-item" id="metric-ema50" style="color: #38bdf8;">EMA50:<span>$219.50</span></div>
+    </div>
+
+    <!-- Chart Canvas -->
+    <div class="chart-container" id="chart-container">
+        <canvas id="chart-canvas"></canvas>
+        <div class="chart-tooltip" id="chart-tooltip"></div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div><span class="pulse-dot"></span>Live market feed simulation · 100ms ticks</div>
+        <div>Powered by MCP-FDC3</div>
+    </footer>
+
+    <script>
+        // ── Reference Instruments ──────────────────────────────────────────────
+        const INSTRUMENTS = {
+            'AAPL': { name: 'Apple Inc.', price: 228.40, vol: '48.2M', isFx: false },
+            'NVDA': { name: 'Nvidia Corp.', price: 124.50, vol: '62.4M', isFx: false },
+            'MSFT': { name: 'Microsoft Corp.', price: 442.80, vol: '21.3M', isFx: false },
+            'TSLA': { name: 'Tesla Inc.', price: 218.90, vol: '38.1M', isFx: false },
+            'GOOGL': { name: 'Alphabet Inc.', price: 172.15, vol: '22.1M', isFx: false },
+            'AMZN': { name: 'Amazon.com Inc.', price: 186.40, vol: '31.5M', isFx: false },
+            'META': { name: 'Meta Platforms Inc.', price: 583.70, vol: '15.7M', isFx: false },
+            'JPM': { name: 'JPMorgan Chase & Co.', price: 212.80, vol: '9.4M', isFx: false },
+            'GS': { name: 'Goldman Sachs Group', price: 498.60, vol: '2.1M', isFx: false },
+            'V': { name: 'Visa Inc.', price: 283.40, vol: '5.8M', isFx: false },
+            'LLY': { name: 'Eli Lilly & Co.', price: 867.50, vol: '3.2M', isFx: false },
+            'NFLX': { name: 'Netflix Inc.', price: 698.20, vol: '4.1M', isFx: false },
+            'EUR/USD': { name: 'Euro / US Dollar', price: 1.0854, vol: 'OTC', isFx: true },
+            'GBP/USD': { name: 'British Pound / USD', price: 1.2580, vol: 'OTC', isFx: true },
+            'USD/JPY': { name: 'US Dollar / Japanese Yen', price: 150.32, vol: 'OTC', isFx: true }
+        };
+
+        const QUICK_SYMBOLS = ['AAPL', 'NVDA', 'MSFT', 'TSLA', 'GOOGL', 'AMZN', 'META', 'EUR/USD', 'GBP/USD'];
+
+        // ── State ─────────────────────────────────────────────────────────────
+        let currentTicker = 'AAPL';
+        let chartType = 'candle'; // 'candle' | 'line'
+        let currentTimeframe = '1M';
+        let showEma = true;
+        let showVolume = true;
+        let candleData = [];
+        let hoverIndex = -1;
+
+        // ── DOM Elements ──────────────────────────────────────────────────────
+        const canvas = document.getElementById('chart-canvas');
+        const ctx = canvas.getContext('2d');
+        const container = document.getElementById('chart-container');
+        const tooltip = document.getElementById('chart-tooltip');
+
+        // ── Synthetic Historical Candle Generator ─────────────────────────────
+        function generateHistory(basePrice, count, isFx) {
+            const data = [];
+            let price = basePrice * (1 - (count * 0.002));
+            const now = Date.now();
+            const intervalMs = currentTimeframe === '1D' ? 5 * 60 * 1000 : 24 * 60 * 60 * 1000;
+
+            for (let i = count - 1; i >= 0; i--) {
+                const time = new Date(now - i * intervalMs);
+                const volatility = isFx ? 0.0015 : 0.015;
+                const changePct = (Math.random() - 0.48) * volatility;
+                const open = price;
+                const close = +(open * (1 + changePct)).toFixed(isFx ? 4 : 2);
+                const high = +(Math.max(open, close) + (open * Math.random() * (volatility * 0.6))).toFixed(isFx ? 4 : 2);
+                const low = +(Math.min(open, close) - (open * Math.random() * (volatility * 0.6))).toFixed(isFx ? 4 : 2);
+                const vol = Math.floor(Math.random() * 500000 + 100000);
+
+                data.push({ time, open, high, low, close, volume: vol });
+                price = close;
+            }
+
+            // Align final close with basePrice
+            data[data.length - 1].close = basePrice;
+            data[data.length - 1].high = Math.max(data[data.length - 1].high, basePrice);
+            data[data.length - 1].low = Math.min(data[data.length - 1].low, basePrice);
+
+            return data;
+        }
+
+        function calculateEma(data, period) {
+            const k = 2 / (period + 1);
+            const emaArray = [];
+            let ema = data[0].close;
+            emaArray.push(ema);
+            for (let i = 1; i < data.length; i++) {
+                ema = (data[i].close * k) + (ema * (1 - k));
+                emaArray.push(ema);
+            }
+            return emaArray;
+        }
+
+        function initDataForCurrentTicker() {
+            const inst = INSTRUMENTS[currentTicker] || { name: currentTicker, price: 100, vol: '10M', isFx: false };
+            const countMap = { '1D': 48, '1W': 35, '1M': 30, '3M': 60, '1Y': 100 };
+            const count = countMap[currentTimeframe] || 30;
+            candleData = generateHistory(inst.price, count, inst.isFx);
+            updateHeaderAndMetrics();
+            drawChart();
+        }
+
+        // ── Render Chart ──────────────────────────────────────────────────────
+        function resizeCanvas() {
+            const rect = container.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            canvas.style.width = `${rect.width}px`;
+            canvas.style.height = `${rect.height}px`;
+            ctx.resetTransform();
+            ctx.scale(dpr, dpr);
+            drawChart();
+        }
+
+        function drawChart() {
+            const w = container.clientWidth;
+            const h = container.clientHeight;
+            if (w <= 0 || h <= 0 || candleData.length === 0) return;
+
+            ctx.clearRect(0, 0, w, h);
+
+            const padding = { top: 20, right: 65, bottom: 25, left: 10 };
+            const chartW = w - padding.left - padding.right;
+            const volH = showVolume ? Math.min(50, h * 0.18) : 0;
+            const chartH = h - padding.top - padding.bottom - volH - (showVolume ? 10 : 0);
+
+            // Compute Min & Max
+            let minP = Infinity;
+            let maxP = -Infinity;
+            let maxV = 0;
+
+            candleData.forEach(d => {
+                if (d.low < minP) minP = d.low;
+                if (d.high > maxP) maxP = d.high;
+                if (d.volume > maxV) maxV = d.volume;
+            });
+
+            const pRange = maxP - minP || 1;
+            minP -= pRange * 0.05;
+            maxP += pRange * 0.05;
+            const adjustedRange = maxP - minP;
+
+            const n = candleData.length;
+            const candleSlotW = chartW / n;
+            const candleBodyW = Math.max(2, Math.min(18, candleSlotW * 0.7));
+
+            // Price to Y conversion
+            const getY = (val) => padding.top + chartH - ((val - minP) / adjustedRange) * chartH;
+            const getX = (i) => padding.left + i * candleSlotW + candleSlotW / 2;
+
+            // 1. Grid Lines & Right Price Axis
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = '#1f242c';
+            ctx.fillStyle = '#7d8590';
+            ctx.font = '10px Inter, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+
+            const steps = 5;
+            for (let i = 0; i <= steps; i++) {
+                const y = padding.top + (chartH / steps) * i;
+                const priceAtY = maxP - (i / steps) * adjustedRange;
+                ctx.beginPath();
+                ctx.moveTo(padding.left, y);
+                ctx.lineTo(padding.left + chartW, y);
+                ctx.stroke();
+
+                const isFx = INSTRUMENTS[currentTicker]?.isFx;
+                const formattedPrice = isFx ? priceAtY.toFixed(4) : `$${priceAtY.toFixed(2)}`;
+                ctx.fillText(formattedPrice, padding.left + chartW + 8, y);
+            }
+
+            // 2. Volume Bars
+            if (showVolume) {
+                const volTop = padding.top + chartH + 10;
+                candleData.forEach((d, i) => {
+                    const x = getX(i);
+                    const vH = (d.volume / maxV) * volH;
+                    const isUp = d.close >= d.open;
+                    ctx.fillStyle = isUp ? 'rgba(63, 185, 80, 0.25)' : 'rgba(248, 81, 73, 0.25)';
+                    ctx.fillRect(x - candleBodyW / 2, volTop + volH - vH, candleBodyW, vH);
+                });
+            }
+
+            // 3. Main Chart (Candles or Line)
+            if (chartType === 'candle') {
+                candleData.forEach((d, i) => {
+                    const x = getX(i);
+                    const isUp = d.close >= d.open;
+                    const color = isUp ? '#3fb950' : '#f85149';
+
+                    const openY = getY(d.open);
+                    const closeY = getY(d.close);
+                    const highY = getY(d.high);
+                    const lowY = getY(d.low);
+
+                    // Wick
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 1.2;
+                    ctx.beginPath();
+                    ctx.moveTo(x, highY);
+                    ctx.lineTo(x, lowY);
+                    ctx.stroke();
+
+                    // Body
+                    const bodyTop = Math.min(openY, closeY);
+                    const bodyHeight = Math.max(1.5, Math.abs(closeY - openY));
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x - candleBodyW / 2, bodyTop, candleBodyW, bodyHeight);
+                });
+            } else {
+                // Line / Area Chart
+                ctx.beginPath();
+                ctx.moveTo(getX(0), getY(candleData[0].close));
+                for (let i = 1; i < n; i++) {
+                    ctx.lineTo(getX(i), getY(candleData[i].close));
+                }
+
+                // Gradient Area Fill
+                const grad = ctx.createLinearGradient(0, padding.top, 0, padding.top + chartH);
+                grad.addColorStop(0, 'rgba(56, 189, 248, 0.35)');
+                grad.addColorStop(1, 'rgba(56, 189, 248, 0.0)');
+
+                ctx.save();
+                ctx.lineTo(getX(n - 1), padding.top + chartH);
+                ctx.lineTo(getX(0), padding.top + chartH);
+                ctx.closePath();
+                ctx.fillStyle = grad;
+                ctx.fill();
+                ctx.restore();
+
+                // Stroke Line
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            // 4. Moving Averages (EMA 20, EMA 50)
+            if (showEma && candleData.length > 5) {
+                const ema20 = calculateEma(candleData, 20);
+                const ema50 = calculateEma(candleData, 50);
+
+                // EMA 20 (Amber)
+                ctx.strokeStyle = '#e3b341';
+                ctx.lineWidth = 1.4;
+                ctx.beginPath();
+                ctx.moveTo(getX(0), getY(ema20[0]));
+                for (let i = 1; i < n; i++) ctx.lineTo(getX(i), getY(ema20[i]));
+                ctx.stroke();
+
+                // EMA 50 (Cyan)
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 1.4;
+                ctx.beginPath();
+                ctx.moveTo(getX(0), getY(ema50[0]));
+                for (let i = 1; i < n; i++) ctx.lineTo(getX(i), getY(ema50[i]));
+                ctx.stroke();
+            }
+
+            // 5. Crosshair & Hover Tooltip
+            if (hoverIndex >= 0 && hoverIndex < n) {
+                const hoverData = candleData[hoverIndex];
+                const hx = getX(hoverIndex);
+                const hy = getY(hoverData.close);
+
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+                ctx.setLineDash([3, 3]);
+                ctx.lineWidth = 1;
+
+                // Vertical Crosshair
+                ctx.beginPath();
+                ctx.moveTo(hx, padding.top);
+                ctx.lineTo(hx, h - padding.bottom);
+                ctx.stroke();
+
+                // Horizontal Crosshair
+                ctx.beginPath();
+                ctx.moveTo(padding.left, hy);
+                ctx.lineTo(padding.left + chartW, hy);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Axis Tag on Right Price
+                const isFx = INSTRUMENTS[currentTicker]?.isFx;
+                const priceTag = isFx ? hoverData.close.toFixed(4) : `$${hoverData.close.toFixed(2)}`;
+                ctx.fillStyle = '#21262d';
+                ctx.fillRect(padding.left + chartW + 2, hy - 9, 60, 18);
+                ctx.strokeStyle = '#38bdf8';
+                ctx.strokeRect(padding.left + chartW + 2, hy - 9, 60, 18);
+                ctx.fillStyle = '#f0f6fc';
+                ctx.fillText(priceTag, padding.left + chartW + 6, hy);
+            }
+        }
+
+        // ── Interactive Hover Handler ─────────────────────────────────────────
+        container.addEventListener('mousemove', (e) => {
+            const rect = container.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            const padding = { top: 20, right: 65, bottom: 25, left: 10 };
+            const chartW = rect.width - padding.left - padding.right;
+            const n = candleData.length;
+            const slotW = chartW / n;
+
+            if (mouseX >= padding.left && mouseX <= padding.left + chartW && mouseY >= padding.top && mouseY <= rect.height - padding.bottom) {
+                const idx = Math.floor((mouseX - padding.left) / slotW);
+                if (idx >= 0 && idx < n) {
+                    hoverIndex = idx;
+                    const d = candleData[idx];
+                    const isFx = INSTRUMENTS[currentTicker]?.isFx;
+                    const fmt = (p) => isFx ? p.toFixed(4) : `$${p.toFixed(2)}`;
+
+                    tooltip.style.display = 'block';
+                    tooltip.innerHTML = `
+                        <div class="tt-date">${d.time.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+                        <div class="tt-row"><span class="tt-label">Open:</span><span>${fmt(d.open)}</span></div>
+                        <div class="tt-row"><span class="tt-label">High:</span><span>${fmt(d.high)}</span></div>
+                        <div class="tt-row"><span class="tt-label">Low:</span><span>${fmt(d.low)}</span></div>
+                        <div class="tt-row"><span class="tt-label">Close:</span><span>${fmt(d.close)}</span></div>
+                        <div class="tt-row"><span class="tt-label">Volume:</span><span>${d.volume.toLocaleString()}</span></div>
+                    `;
+
+                    const tipW = 140;
+                    let tipX = mouseX + 15;
+                    if (tipX + tipW > rect.width - 70) tipX = mouseX - tipW - 15;
+                    tooltip.style.left = `${tipX}px`;
+                    tooltip.style.top = `${Math.min(mouseY + 10, rect.height - 110)}px`;
+
+                    drawChart();
+                    return;
+                }
+            }
+            if (hoverIndex !== -1) {
+                hoverIndex = -1;
+                tooltip.style.display = 'none';
+                drawChart();
+            }
+        });
+
+        container.addEventListener('mouseleave', () => {
+            hoverIndex = -1;
+            tooltip.style.display = 'none';
+            drawChart();
+        });
+
+        // ── Controls & State Updaters ──────────────────────────────────────────
+        function setChartType(type) {
+            chartType = type;
+            document.getElementById('btn-candle').classList.toggle('active', type === 'candle');
+            document.getElementById('btn-line').classList.toggle('active', type === 'line');
+            drawChart();
+        }
+
+        function setTimeframe(tf, btn) {
+            currentTimeframe = tf;
+            document.querySelectorAll('.toolbar .btn-group:nth-child(2) .tool-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            initDataForCurrentTicker();
+        }
+
+        function toggleIndicator(ind) {
+            if (ind === 'ema') {
+                showEma = !showEma;
+                document.getElementById('btn-ema').classList.toggle('active', showEma);
+                document.getElementById('metric-ema20').style.display = showEma ? 'inline' : 'none';
+                document.getElementById('metric-ema50').style.display = showEma ? 'inline' : 'none';
+            } else if (ind === 'vol') {
+                showVolume = !showVolume;
+                document.getElementById('btn-vol').classList.toggle('active', showVolume);
+            }
+            drawChart();
+        }
+
+        function selectInstrument(ticker, userInitiated = true) {
+            const upper = ticker.toUpperCase();
+            currentTicker = upper;
+            document.querySelectorAll('.ticker-pill').forEach(pill => {
+                pill.classList.toggle('active', pill.dataset.ticker === upper);
+            });
+            initDataForCurrentTicker();
+
+            if (userInitiated) {
+                broadcastCurrentInstrument();
+            }
+        }
+
+        function updateHeaderAndMetrics() {
+            const inst = INSTRUMENTS[currentTicker] || { name: currentTicker, price: 100, vol: '10M', isFx: false };
+            const last = candleData[candleData.length - 1] || { open: inst.price, high: inst.price, low: inst.price, close: inst.price, volume: 100000 };
+            const first = candleData[0] || last;
+            const diff = last.close - first.open;
+            const pct = (diff / first.open) * 100;
+            const pos = diff >= 0;
+
+            const isFx = inst.isFx;
+            const fmt = (p) => isFx ? p.toFixed(4) : `$${p.toFixed(2)}`;
+
+            document.getElementById('display-ticker').textContent = currentTicker;
+            document.getElementById('display-name').textContent = inst.name;
+            document.getElementById('display-price').textContent = fmt(last.close);
+
+            const chgEl = document.getElementById('display-chg');
+            chgEl.className = `price-change ${pos ? 'pos' : 'neg'}`;
+            chgEl.textContent = `${pos ? '+' : ''}${fmt(diff)} (${pos ? '+' : ''}${pct.toFixed(2)}%)`;
+
+            document.getElementById('metric-open').textContent = fmt(last.open);
+            document.getElementById('metric-high').textContent = fmt(last.high);
+            document.getElementById('metric-low').textContent = fmt(last.low);
+            document.getElementById('metric-vol').textContent = inst.vol;
+
+            if (candleData.length > 5) {
+                const ema20 = calculateEma(candleData, 20);
+                const ema50 = calculateEma(candleData, 50);
+                document.querySelector('#metric-ema20 span').textContent = fmt(ema20[ema20.length - 1]);
+                document.querySelector('#metric-ema50 span').textContent = fmt(ema50[ema50.length - 1]);
+            }
+        }
+
+        // ── FDC3 Outbound: Broadcast Instrument to Platform ───────────────────
+        function broadcastCurrentInstrument() {
+            console.log(`[Chart] Broadcasting instrument: ${currentTicker}`);
+            window.parent.postMessage({
+                source: 'mcp-fdc3-app',
+                type: 'navigateAndRaiseIntent',
+                intent: 'ViewInstrument',
+                context: {
+                    type: 'fdc3.instrument',
+                    name: INSTRUMENTS[currentTicker]?.name || currentTicker,
+                    id: { ticker: currentTicker }
+                }
+            }, window.location.origin);
+        }
+
+        // ── FDC3 Inbound: Intent & Context Listener ───────────────────────────
+        window.addEventListener('message', (event) => {
+            if (event.origin !== window.location.origin) return;
+            const msg = event.data;
+            if (!msg || msg.source !== 'mcp-fdc3-platform') return;
+
+            console.log('%c[Chart] FDC3 message received:', 'color:#38bdf8;font-weight:bold;', msg);
+
+            if (msg.type === 'raiseIntent') {
+                const ctx = msg.context;
+                let ticker = ctx?.id?.ticker || ctx?.ticker || ctx?.symbol || ctx?.instruments?.[0]?.id?.ticker || currentTicker;
+
+                // Optional intent parameters (timeframe or chartType)
+                if (ctx?.timeframe) {
+                    const tf = ctx.timeframe.toUpperCase();
+                    const btn = Array.from(document.querySelectorAll('.toolbar .btn-group:nth-child(2) .tool-btn'))
+                        .find(b => b.textContent.trim().toUpperCase() === tf);
+                    setTimeframe(tf, btn);
+                }
+                if (ctx?.chartType) {
+                    setChartType(ctx.chartType.toLowerCase());
+                }
+
+                if (ticker) {
+                    ticker = ticker.toUpperCase();
+                    if (!INSTRUMENTS[ticker]) {
+                        // Register unknown dynamically
+                        INSTRUMENTS[ticker] = {
+                            name: ctx?.name || (ticker === 'COIN' ? 'Coinbase Global Inc.' : ticker === 'AMD' ? 'Advanced Micro Devices' : ticker),
+                            price: ctx?.details?.price || (ticker === 'COIN' ? 245.80 : ticker === 'AMD' ? 142.30 : 150.0),
+                            vol: '10.0M',
+                            isFx: ticker.includes('/')
+                        };
+                    }
+
+                    selectInstrument(ticker, false);
+                }
+
+                const banner = document.getElementById('fdc3-banner');
+                const label = document.getElementById('fdc3-banner-label');
+                label.textContent = `🔵 FDC3 ${msg.intent || 'ViewChart'} — showing ${currentTicker} [${currentTimeframe}] (${chartType})`;
+                banner.classList.add('visible');
+            } else if (msg.intent === 'ClearFilter' || msg.type === 'clearFilter') {
+                clearFdc3Filter();
+            }
+        });
+
+        function clearFdc3Filter() {
+            document.getElementById('fdc3-banner').classList.remove('visible');
+            const defaultBtn = Array.from(document.querySelectorAll('.toolbar .btn-group:nth-child(2) .tool-btn'))
+                .find(b => b.textContent.trim().toUpperCase() === '1M');
+            setTimeframe('1M', defaultBtn);
+            setChartType('candle');
+        }
+
+        // ── Quick Ticker Selector Setup ───────────────────────────────────────
+        function setupQuickTickers() {
+            const container = document.getElementById('quick-tickers');
+            container.innerHTML = QUICK_SYMBOLS.map(t =>
+                `<div class="ticker-pill${t === currentTicker ? ' active' : ''}" data-ticker="${t}" onclick="selectInstrument('${t}')">${t}</div>`
+            ).join('');
+        }
+
+        // ── Real-time Ticking Simulation ──────────────────────────────────────
+        setInterval(() => {
+            if (candleData.length === 0) return;
+            const inst = INSTRUMENTS[currentTicker];
+            const isFx = inst?.isFx;
+            const delta = isFx ? (Math.random() - 0.49) * 0.0004 : (Math.random() - 0.49) * 0.4;
+            const last = candleData[candleData.length - 1];
+
+            last.close = +(last.close + delta).toFixed(isFx ? 4 : 2);
+            last.high = Math.max(last.high, last.close);
+            last.low = Math.min(last.low, last.close);
+            last.volume += Math.floor(Math.random() * 50);
+
+            if (inst) {
+                inst.price = last.close;
+            }
+
+            updateHeaderAndMetrics();
+            drawChart();
+        }, 1500);
+
+        // ── Init & Resize Observer ────────────────────────────────────────────
+        setupQuickTickers();
+        initDataForCurrentTicker();
+
+        window.addEventListener('resize', resizeCanvas);
+        const ro = new ResizeObserver(() => resizeCanvas());
+        ro.observe(container);
+    </script>
+</body>
+
+</html>
