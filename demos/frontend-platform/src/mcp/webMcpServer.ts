@@ -857,15 +857,6 @@ export function createWebMcpServer(): McpServer {
       };
       const fdc3Resource = createFdc3RaiseIntentResource('ViewApp', context, targetApp);
 
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('fdc3-intent', {
-          detail: { intent: 'ViewApp', context, appId: targetAppId }
-        }));
-        window.dispatchEvent(new CustomEvent('switch-view', {
-          detail: { view: resolvedView, appId: targetAppId }
-        }));
-      }
-
       return createWebMcpResult({
         status: 'success',
         message: `Switched view to ${displayName}. The tab is now active.`,

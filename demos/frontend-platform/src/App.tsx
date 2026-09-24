@@ -227,42 +227,102 @@ const components = {
 function App() {
   const [layoutReady, setLayoutReady] = useState<GoldenLayout | null>(null);
 
-  const switchToTab = useCallback((url: string, title?: string): boolean => {
-    if (!layoutReady || !layoutReady.rootItem) return false;
+  const appMap: Record<string, { url: string; title: string; icon: string; cls: string }> = {
+    'frontend-app-order-ticket': { url: '/demos/frontend-app-order-ticket/index.html', title: 'Order Ticket', icon: '⚡', cls: 'ticket' },
+    'frontend-app-blotter': { url: '/demos/frontend-app-blotter/index.html', title: 'Orders Blotter', icon: '📋', cls: 'blotter' },
+    'frontend-app-trade-blotter': { url: '/demos/frontend-app-trade-blotter/index.html', title: 'Trade Blotter', icon: '🧾', cls: 'trade-blotter' },
+    'frontend-app-rfq': { url: '/demos/frontend-app-rfq/index.html', title: 'RFQ Panel', icon: '💬', cls: 'rfq' },
+    'frontend-app-news': { url: '/demos/frontend-app-news/index.html', title: 'News Feed', icon: '📰', cls: 'news' },
+    'frontend-app-watchlist': { url: '/demos/frontend-app-watchlist/index.html', title: 'Watchlist', icon: '📊', cls: 'watchlist' },
+    'frontend-app-chart': { url: '/demos/frontend-app-chart/index.html', title: 'Chart', icon: '📈', cls: 'chart' },
+    'frontend-app-positions': { url: '/demos/frontend-app-positions/index.html', title: 'Positions', icon: '💼', cls: 'positions' },
+    'frontend-app-account': { url: '/demos/frontend-app-account/index.html', title: 'Account Summary', icon: '💰', cls: 'account' },
+    'chat': { url: '', title: 'Chat', icon: '🤖', cls: 'chat' },
+    'frontend-app-chat': { url: '', title: 'Chat', icon: '🤖', cls: 'chat' },
+  };
 
-    // Helper: traverse GoldenLayout content tree to find the ComponentItem
-    const findComponent = (item: any): any => {
+  const pendingOpenRef = useRef<Set<string>>(new Set());
+
+  // Helper: locate a component item in GoldenLayout tree by URL or title
+  const findComponentItem = useCallback((url: string, title?: string): any => {
+    if (!layoutReady || !layoutReady.rootItem) return null;
+
+    const cleanUrl = url ? url.split('?')[0].replace(/^\//, '').toLowerCase() : '';
+    const cleanTitle = title ? title.trim().toLowerCase() : '';
+
+    const traverse = (item: any): any => {
       if (!item) return null;
       if (item.isComponent) {
         const state = item.container?.state || item.container?.initialState;
-        const stateUrl = state?.url;
-        const itemTitle = item.title;
+        const stateUrl = ((state?.url as string) || '').split('?')[0].replace(/^\//, '').toLowerCase();
+        const itemTitle = ((item.title as string) || '').trim().toLowerCase();
         const compType = item.componentType;
 
-        if (url && stateUrl && (stateUrl === url || stateUrl.includes(url) || url.includes(stateUrl))) {
+        if (cleanUrl && stateUrl && (stateUrl.includes(cleanUrl) || cleanUrl.includes(stateUrl))) {
           return item;
         }
-        if (title && itemTitle && (
-          itemTitle.toLowerCase() === title.toLowerCase() ||
-          itemTitle.toLowerCase().includes(title.toLowerCase()) ||
-          title.toLowerCase().includes(itemTitle.toLowerCase())
+        if (cleanTitle && itemTitle && (
+          itemTitle === cleanTitle ||
+          itemTitle.includes(cleanTitle) ||
+          cleanTitle.includes(itemTitle)
         )) {
           return item;
         }
-        if (title && title.toLowerCase() === 'chat' && compType === 'chat') {
+        if (cleanTitle === 'chat' && compType === 'chat') {
           return item;
         }
       }
       if (item.contentItems && Array.isArray(item.contentItems)) {
         for (const child of item.contentItems) {
-          const found = findComponent(child);
+          const found = traverse(child);
           if (found) return found;
         }
       }
       return null;
     };
 
-    const targetItem = findComponent(layoutReady.rootItem);
+    return traverse(layoutReady.rootItem);
+  }, [layoutReady]);
+
+  // Checks whether a tab/panel is already open in GoldenLayout or the DOM
+  const isTabOpen = useCallback((url: string, title?: string): boolean => {
+    // 1. Check GoldenLayout component hierarchy
+    if (findComponentItem(url, title)) return true;
+
+    // 2. Check DOM iframes
+    if (url) {
+      const cleanUrl = url.split('?')[0].replace(/^\//, '').toLowerCase();
+      const iframes = document.querySelectorAll<HTMLIFrameElement>('iframe.panel-frame');
+      for (const ifr of iframes) {
+        const src = (ifr.src || ifr.getAttribute('src') || '').toLowerCase();
+        if (cleanUrl && src.includes(cleanUrl)) return true;
+      }
+    }
+
+    // 3. Check Chat DOM
+    if (title && title.toLowerCase() === 'chat' && document.querySelector('.chat-panel')) {
+      return true;
+    }
+
+    // 4. Check DOM tab titles in GoldenLayout header
+    if (title) {
+      const cleanTitle = title.trim().toLowerCase();
+      const tabs = document.querySelectorAll<HTMLElement>('.lm_header .lm_tab .lm_title');
+      for (const t of tabs) {
+        const text = (t.textContent || '').trim().toLowerCase();
+        if (text && (text === cleanTitle || text.includes(cleanTitle) || cleanTitle.includes(text))) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }, [findComponentItem]);
+
+  const switchToTab = useCallback((url: string, title?: string): boolean => {
+    if (!layoutReady || !layoutReady.rootItem) return false;
+
+    const targetItem = findComponentItem(url, title);
     let switched = false;
 
     if (targetItem) {
@@ -281,16 +341,17 @@ function App() {
     }
 
     // Secondary DOM fallback: find the corresponding tab in GoldenLayout header and click it
-    const candidateTitles = [
-      title,
-      targetItem?.title,
-    ].filter(Boolean).map(t => (t as string).toLowerCase());
+    const cleanTitle = title ? title.trim().toLowerCase() : '';
+    const cleanTargetTitle = targetItem?.title ? (targetItem.title as string).trim().toLowerCase() : '';
 
     const tabs = document.querySelectorAll<HTMLElement>('.lm_header .lm_tab');
     for (const tab of tabs) {
       const titleEl = tab.querySelector('.lm_title');
-      const text = titleEl?.textContent?.trim().toLowerCase();
-      if (text && candidateTitles.some(c => text === c || text.includes(c) || c.includes(text))) {
+      const text = (titleEl?.textContent || '').trim().toLowerCase();
+      if (text && (
+        (cleanTitle && (text === cleanTitle || text.includes(cleanTitle) || cleanTitle.includes(text))) ||
+        (cleanTargetTitle && (text === cleanTargetTitle || text.includes(cleanTargetTitle) || cleanTargetTitle.includes(text)))
+      )) {
         tab.click();
         switched = true;
         break;
@@ -302,21 +363,7 @@ function App() {
     } catch {}
 
     return switched;
-  }, [layoutReady]);
-
-  const appMap: Record<string, { url: string; title: string; icon: string; cls: string }> = {
-    'frontend-app-order-ticket': { url: '/demos/frontend-app-order-ticket/index.html', title: 'Order Ticket', icon: '⚡', cls: 'ticket' },
-    'frontend-app-blotter': { url: '/demos/frontend-app-blotter/index.html', title: 'Orders Blotter', icon: '📋', cls: 'blotter' },
-    'frontend-app-trade-blotter': { url: '/demos/frontend-app-trade-blotter/index.html', title: 'Trade Blotter', icon: '🧾', cls: 'trade-blotter' },
-    'frontend-app-rfq': { url: '/demos/frontend-app-rfq/index.html', title: 'RFQ Panel', icon: '💬', cls: 'rfq' },
-    'frontend-app-news': { url: '/demos/frontend-app-news/index.html', title: 'News Feed', icon: '📰', cls: 'news' },
-    'frontend-app-watchlist': { url: '/demos/frontend-app-watchlist/index.html', title: 'Watchlist', icon: '📊', cls: 'watchlist' },
-    'frontend-app-chart': { url: '/demos/frontend-app-chart/index.html', title: 'Chart', icon: '📈', cls: 'chart' },
-    'frontend-app-positions': { url: '/demos/frontend-app-positions/index.html', title: 'Positions', icon: '💼', cls: 'positions' },
-    'frontend-app-account': { url: '/demos/frontend-app-account/index.html', title: 'Account Summary', icon: '💰', cls: 'account' },
-    'chat': { url: '', title: 'Chat', icon: '🤖', cls: 'chat' },
-    'frontend-app-chat': { url: '', title: 'Chat', icon: '🤖', cls: 'chat' },
-  };
+  }, [layoutReady, findComponentItem]);
 
   // Handle navigateAndRaiseIntent from child apps
   const handleChildMessage = useCallback((event: MessageEvent) => {
@@ -395,73 +442,75 @@ function App() {
     }
   }, [layoutReady]);
 
-  const openOrSwitchToPanel = useCallback((url: string, title: string, icon: string, cls: string) => {
+  const openOrSwitchToPanel = useCallback((url: string, title: string, icon: string, cls: string, appId?: string) => {
     if (!layoutReady || !layoutReady.rootItem) return;
 
-    const isOpen = !!document.querySelector(`iframe[src="${url}"]`);
-    if (isOpen) {
+    const key = appId || url || title;
+    if (pendingOpenRef.current.has(key)) {
+      return;
+    }
+
+    if (isTabOpen(url, title)) {
       switchToTab(url, title);
     } else {
+      pendingOpenRef.current.add(key);
       addPanel(url, title, icon, cls);
       setTimeout(() => {
         switchToTab(url, title);
-      }, 150);
+        pendingOpenRef.current.delete(key);
+      }, 300);
     }
-  }, [layoutReady, addPanel, switchToTab]);
+  }, [layoutReady, isTabOpen, switchToTab, addPanel]);
 
   const openOrSwitchToChat = useCallback(() => {
     if (!layoutReady || !layoutReady.rootItem) return;
-    const hasChat = !!document.querySelector('.chat-panel');
-    if (hasChat) {
+
+    if (isTabOpen('', 'Chat')) {
       switchToTab('', 'Chat');
     } else {
+      if (pendingOpenRef.current.has('chat')) return;
+      pendingOpenRef.current.add('chat');
       addChatPanel();
       setTimeout(() => {
         switchToTab('', 'Chat');
-      }, 150);
+        pendingOpenRef.current.delete('chat');
+      }, 300);
     }
-  }, [layoutReady, addChatPanel, switchToTab]);
+  }, [layoutReady, isTabOpen, switchToTab, addChatPanel]);
 
   useEffect(() => {
     const handleFdc3Intent = (e: Event) => {
       const { intent, context, appId } = (e as CustomEvent).detail;
+      if (!appId || !appMap[appId]) return;
 
-      if (appId && appMap[appId]) {
-        const cfg = appMap[appId];
-        if (cfg.url) {
-          const isOpen = !!document.querySelector(`iframe[src="${cfg.url}"]`);
-          if (isOpen) {
-            // Already opened -> immediately switch to that tab!
-            switchToTab(cfg.url, cfg.title);
-          } else {
-            // Not opened yet -> add panel and switch to it
-            addPanel(cfg.url, cfg.title, cfg.icon, cfg.cls);
-
-            setTimeout(() => {
-              switchToTab(cfg.url, cfg.title);
-              const iframes = document.querySelectorAll('iframe.panel-frame');
-              iframes.forEach((ifr: Element) => {
-                const win = (ifr as HTMLIFrameElement).contentWindow;
-                if (win && typeof win.postMessage === 'function') {
-                  win.postMessage({ source: 'mcp-fdc3-platform', type: 'raiseIntent', sessionId: fdc3SessionId, intent, context }, platformOrigin);
-                }
-              });
-            }, 300);
-          }
+      const cfg = appMap[appId];
+      if (cfg.url) {
+        if (isTabOpen(cfg.url, cfg.title)) {
+          // Already opened -> immediately switch to that tab!
+          switchToTab(cfg.url, cfg.title);
         } else {
-          // Chat panel
-          switchToTab('', 'Chat');
-        }
-      }
-    };
+          if (pendingOpenRef.current.has(appId)) return;
+          pendingOpenRef.current.add(appId);
 
-    const handleSwitchView = (e: Event) => {
-      const { view, appId } = (e as CustomEvent).detail || {};
-      const targetId = appId || (view ? (view === 'chat' ? 'chat' : `frontend-app-${view}`) : undefined);
-      if (targetId && appMap[targetId]) {
-        const cfg = appMap[targetId];
-        if (cfg.url) {
-          openOrSwitchToPanel(cfg.url, cfg.title, cfg.icon, cfg.cls);
+          addPanel(cfg.url, cfg.title, cfg.icon, cfg.cls);
+
+          setTimeout(() => {
+            switchToTab(cfg.url, cfg.title);
+            pendingOpenRef.current.delete(appId);
+
+            const iframes = document.querySelectorAll('iframe.panel-frame');
+            iframes.forEach((ifr: Element) => {
+              const win = (ifr as HTMLIFrameElement).contentWindow;
+              if (win && typeof win.postMessage === 'function') {
+                win.postMessage({ source: 'mcp-fdc3-platform', type: 'raiseIntent', sessionId: fdc3SessionId, intent, context }, platformOrigin);
+              }
+            });
+          }, 300);
+        }
+      } else {
+        // Chat panel
+        if (isTabOpen('', 'Chat')) {
+          switchToTab('', 'Chat');
         } else {
           openOrSwitchToChat();
         }
@@ -469,12 +518,10 @@ function App() {
     };
 
     window.addEventListener('fdc3-intent', handleFdc3Intent);
-    window.addEventListener('switch-view', handleSwitchView);
     return () => {
       window.removeEventListener('fdc3-intent', handleFdc3Intent);
-      window.removeEventListener('switch-view', handleSwitchView);
     };
-  }, [addPanel, openOrSwitchToPanel, openOrSwitchToChat, switchToTab]);
+  }, [addPanel, openOrSwitchToChat, switchToTab, isTabOpen]);
 
   const isPopout = window.location.search.includes('gl-window');
 
